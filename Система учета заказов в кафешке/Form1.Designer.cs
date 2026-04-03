@@ -20,7 +20,7 @@
             base.Dispose(disposing);
         }
 
-        #region Код, автоматически созданный конструктором форм Windows
+        #region Код автоматически сгенерирован
 
         /// <summary>
         /// Required method for Designer support - do not modify
@@ -45,6 +45,7 @@
             this.btnEditOrder = new System.Windows.Forms.Button();
             this.labelOrderTotal = new System.Windows.Forms.Label();
             this.groupBoxActiveOrders = new System.Windows.Forms.GroupBox();
+            this.btnCompleteOrder = new System.Windows.Forms.Button();
             this.dataGridViewActiveOrders = new System.Windows.Forms.DataGridView();
             this.OrderNumber = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.OrderItems = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -68,8 +69,8 @@
             this.btnMarkReady = new System.Windows.Forms.Button();
             this.tabPageDisplay = new System.Windows.Forms.TabPage();
             this.tableLayoutPanelDisplay = new System.Windows.Forms.TableLayoutPanel();
-            this.labelDisplayTitle = new System.Windows.Forms.Label();
             this.flowLayoutPanelOrders = new System.Windows.Forms.FlowLayoutPanel();
+            this.labelDisplayTitle = new System.Windows.Forms.Label();
             this.tabPageHistory = new System.Windows.Forms.TabPage();
             this.splitContainerHistory = new System.Windows.Forms.SplitContainer();
             this.groupBoxFilters = new System.Windows.Forms.GroupBox();
@@ -277,7 +278,6 @@
             "Круассан - 150 руб.",
             "Чизкейк - 250 руб.",
             "Тирамису - 280 руб.",
-            "Чизкейк - 312 руб.",
             "Сэндвич с курицей - 220 руб.",
             "Сэндвич с говядиной - 224 руб.",
             "Салат Цезарь - 320 руб.",
@@ -403,6 +403,7 @@
             // 
             // groupBoxActiveOrders
             // 
+            this.groupBoxActiveOrders.Controls.Add(this.btnCompleteOrder);
             this.groupBoxActiveOrders.Controls.Add(this.dataGridViewActiveOrders);
             this.groupBoxActiveOrders.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBoxActiveOrders.Location = new System.Drawing.Point(0, 0);
@@ -411,6 +412,16 @@
             this.groupBoxActiveOrders.TabIndex = 0;
             this.groupBoxActiveOrders.TabStop = false;
             this.groupBoxActiveOrders.Text = "Активные заказы";
+            // 
+            // btnCompleteOrder
+            // 
+            this.btnCompleteOrder.BackColor = System.Drawing.Color.Orange;
+            this.btnCompleteOrder.Location = new System.Drawing.Point(570, 15);
+            this.btnCompleteOrder.Name = "btnCompleteOrder";
+            this.btnCompleteOrder.Size = new System.Drawing.Size(150, 35);
+            this.btnCompleteOrder.TabIndex = 2;
+            this.btnCompleteOrder.Text = "Завершить заказ";
+            this.btnCompleteOrder.UseVisualStyleBackColor = false;
             // 
             // dataGridViewActiveOrders
             // 
@@ -423,13 +434,12 @@
             this.Status,
             this.Time,
             this.Total});
-            this.dataGridViewActiveOrders.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridViewActiveOrders.Location = new System.Drawing.Point(3, 16);
+            this.dataGridViewActiveOrders.Location = new System.Drawing.Point(6, 56);
             this.dataGridViewActiveOrders.Name = "dataGridViewActiveOrders";
             this.dataGridViewActiveOrders.ReadOnly = true;
             this.dataGridViewActiveOrders.RowHeadersVisible = false;
             this.dataGridViewActiveOrders.RowTemplate.Height = 28;
-            this.dataGridViewActiveOrders.Size = new System.Drawing.Size(726, 621);
+            this.dataGridViewActiveOrders.Size = new System.Drawing.Size(720, 578);
             this.dataGridViewActiveOrders.TabIndex = 0;
             // 
             // OrderNumber
@@ -652,6 +662,16 @@
             this.tableLayoutPanelDisplay.Size = new System.Drawing.Size(1192, 693);
             this.tableLayoutPanelDisplay.TabIndex = 0;
             // 
+            // flowLayoutPanelOrders
+            // 
+            this.flowLayoutPanelOrders.AutoScroll = true;
+            this.flowLayoutPanelOrders.BackColor = System.Drawing.Color.Black;
+            this.flowLayoutPanelOrders.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.flowLayoutPanelOrders.Location = new System.Drawing.Point(3, 83);
+            this.flowLayoutPanelOrders.Name = "flowLayoutPanelOrders";
+            this.flowLayoutPanelOrders.Size = new System.Drawing.Size(1186, 607);
+            this.flowLayoutPanelOrders.TabIndex = 1;
+            // 
             // labelDisplayTitle
             // 
             this.labelDisplayTitle.AutoSize = true;
@@ -662,16 +682,6 @@
             this.labelDisplayTitle.TabIndex = 0;
             this.labelDisplayTitle.Text = "Статус выполнения заказов";
             this.labelDisplayTitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // flowLayoutPanelOrders
-            // 
-            this.flowLayoutPanelOrders.AutoScroll = true;
-            this.flowLayoutPanelOrders.BackColor = System.Drawing.Color.Black;
-            this.flowLayoutPanelOrders.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.flowLayoutPanelOrders.Location = new System.Drawing.Point(3, 83);
-            this.flowLayoutPanelOrders.Name = "flowLayoutPanelOrders";
-            this.flowLayoutPanelOrders.Size = new System.Drawing.Size(1186, 607);
-            this.flowLayoutPanelOrders.TabIndex = 1;
             // 
             // tabPageHistory
             // 
@@ -1206,7 +1216,6 @@
             this.comboBoxRole.FormattingEnabled = true;
             this.comboBoxRole.Items.AddRange(new object[] {
             "Администратор",
-            "Официант",
             "Повар",
             "Кассир"});
             this.comboBoxRole.Location = new System.Drawing.Point(20, 200);
@@ -1480,7 +1489,6 @@
             this.menuStrip.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
-
         }
 
         #endregion
@@ -1578,6 +1586,7 @@
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusTime;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusUser;
         private System.Windows.Forms.Timer timerClock;
+        private System.Windows.Forms.Button btnCompleteOrder;
 
         // DataGridView columns
         private System.Windows.Forms.DataGridViewTextBoxColumn OrderNumber;

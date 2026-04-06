@@ -3,31 +3,29 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using Система_учета_заказов_в_кафешке.Database;
+using MenuItemModel = Система_учета_заказов_в_кафешке.Models.MenuItem;
+using OrderItemModel = Система_учета_заказов_в_кафешке.Models.OrderItem;
 
 namespace Система_учета_заказов_в_кафешке
 {
     public partial class MainForm : Form
     {
+        private DatabaseService _db;
+        private string _currentUser;
+        private string _currentRole;
         private int nextOrderNumber = 1;
-        private List<Order> orders = new List<Order>();
-        private List<OrderItem> currentOrderItems = new List<OrderItem>();
+        private List<OrderItemModel> currentOrderItems = new List<OrderItemModel>();
+        private List<MenuItemModel> menuItems = new List<MenuItemModel>();
 
-        public class MenuItem
+        public MainForm(string username, string role)
         {
-            public int Id { get; set; }
-            public string Name { get; set; }
-            public string Category { get; set; }
-            public decimal Price { get; set; }
-            public string DisplayText { get { return $"{Name} - {Price} руб."; } }
-        }
-
-        private List<MenuItem> menuItems = new List<MenuItem>();
-        private int nextMenuItemId = 1;
-
-        public MainForm()
-        {
+            _currentUser = username;
+            _currentRole = role;
+            _db = DatabaseService.Instance;
             InitializeComponent();
             InitializeForm();
+            LoadDataFromDatabase();
         }
 
         private void InitializeForm()
@@ -39,7 +37,18 @@ namespace Система_учета_заказов_в_кафешке
             dateTimePickerStart.Value = DateTime.Today;
             dateTimePickerEnd.Value = DateTime.Today.AddDays(1);
 
-            toolStripStatusUser.Text = "Пользователь: Администратор";
+            toolStripStatusUser.Text = $"Пользователь: {_currentUser} ({_currentRole})";
+
+            // Настройка прав доступа
+            if (_currentRole != "Администратор")
+            {
+                tabPageAdmin.Enabled = false;
+            }
+            if (_currentRole == "Повар")
+            {
+                tabPageOrders.Enabled = false;
+                tabPageHistory.Enabled = false;
+            }
 
             dataGridViewPendingOrders.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dataGridViewPendingOrders.MultiSelect = false;
@@ -78,6 +87,7 @@ namespace Система_учета_заказов_в_кафешке
             exitToolStripMenuItem.Click += ExitToolStripMenuItem_Click;
             aboutToolStripMenuItem.Click += AboutToolStripMenuItem_Click;
             refreshAllToolStripMenuItem.Click += RefreshAllToolStripMenuItem_Click;
+            changeUserToolStripMenuItem.Click += ChangeUserToolStripMenuItem_Click;
 
             if (btnCompleteOrder != null)
             {
@@ -86,63 +96,35 @@ namespace Система_учета_заказов_в_кафешке
 
             dataGridViewMenu.CellClick += DataGridViewMenu_CellClick;
 
-            dataGridViewPendingOrders.CellClick += DataGridViewPendingOrders_CellClick;
-            dataGridViewInProgress.CellClick += DataGridViewInProgress_CellClick;
-
-            LoadTestMenuItems();
-
             RefreshMenuGrid();
         }
 
-        private void LoadTestMenuItems()
+        private void LoadDataFromDatabase()
         {
-            // Напитки
-            AddMenuItemToCollection("Капучино", "Напитки", 180);
-            AddMenuItemToCollection("Латте", "Напитки", 200);
-            AddMenuItemToCollection("Эспрессо", "Напитки", 120);
-            AddMenuItemToCollection("Чай черный", "Напитки", 100);
-            AddMenuItemToCollection("Чай зеленый", "Напитки", 100);
-            AddMenuItemToCollection("Яблочный сок", "Напитки", 89);
-            AddMenuItemToCollection("Апельсиновый сок", "Напитки", 89);
-            AddMenuItemToCollection("Ананасовый сок", "Напитки", 89);
-            AddMenuItemToCollection("Сок Мультифрукт", "Напитки", 96);
-            AddMenuItemToCollection("Грушевый лимонад", "Напитки", 94);
-
-            // Десерты
-            AddMenuItemToCollection("Круассан", "Десерты", 150);
-            AddMenuItemToCollection("Чизкейк", "Десерты", 250);
-            AddMenuItemToCollection("Тирамису", "Десерты", 280);
-
-            // Салаты
-            AddMenuItemToCollection("Салат Цезарь", "Салаты", 320);
-
-            // Горячие блюда
-            AddMenuItemToCollection("Чизбургер", "Горячие блюда", 367);
-            AddMenuItemToCollection("Классический бургер", "Горячие блюда", 242);
-            AddMenuItemToCollection("Крабсбургер", "Горячие блюда", 344);
-            AddMenuItemToCollection("Чикен Бургер", "Горячие блюда", 252);
-            AddMenuItemToCollection("Черный Бургер", "Горячие блюда", 262);
-            AddMenuItemToCollection("Пицца 4 сыра", "Горячие блюда", 489);
-            AddMenuItemToCollection("Пицца Маргарита", "Горячие блюда", 462);
-            AddMenuItemToCollection("Пицца Пеперони", "Горячие блюда", 469);
-            AddMenuItemToCollection("Пицца классическая", "Горячие блюда", 400);
-
-            // Закуски
-            AddMenuItemToCollection("Сэндвич с курицей", "Закуски", 220);
-            AddMenuItemToCollection("Сэндвич с говядиной", "Закуски", 224);
+            LoadMenuFromDatabase();
+            LoadUsersFromDatabase();
+            RefreshOrdersList();
+            RefreshKitchenView();
         }
 
-        private void AddMenuItemToCollection(string name, string category, decimal price)
+        private void LoadMenuFromDatabase()
         {
-            menuItems.Add(new MenuItem
+            menuItems = _db.GetAllMenuItems();
+            listBoxAvailableItems.Items.Clear();
+            foreach (var item in menuItems)
             {
-                Id = nextMenuItemId++,
-                Name = name,
-                Category = category,
-                Price = price
-            });
+                listBoxAvailableItems.Items.Add($"{item.Name} - {item.Price} руб.");
+            }
+        }
 
-            listBoxAvailableItems.Items.Add($"{name} - {price} руб.");
+        private void LoadUsersFromDatabase()
+        {
+            var users = _db.GetAllUsers();
+            dataGridViewUsers.Rows.Clear();
+            foreach (var user in users)
+            {
+                dataGridViewUsers.Rows.Add(user.Id, user.Username, user.Role);
+            }
         }
 
         private void UpdateClock()
@@ -177,11 +159,11 @@ namespace Система_учета_заказов_в_кафешке
                     existingItem.Quantity += quantity;
                     existingItem.Total = existingItem.Price * existingItem.Quantity;
                     int index = currentOrderItems.IndexOf(existingItem);
-                    listBoxCurrentOrder.Items[index] = $"{existingItem.Name} - {existingItem.Price} руб. x{existingItem.Quantity} = {existingItem.Total} руб.";
+                    listBoxCurrentOrder.Items[index] = $"{existingItem.Name} - {existingItem.Price:F2} руб. x{existingItem.Quantity} = {existingItem.Total:F2} руб.";
                 }
                 else
                 {
-                    var newItem = new OrderItem
+                    var newItem = new OrderItemModel
                     {
                         Name = itemName,
                         Price = price,
@@ -189,7 +171,7 @@ namespace Система_учета_заказов_в_кафешке
                         Total = price * quantity
                     };
                     currentOrderItems.Add(newItem);
-                    listBoxCurrentOrder.Items.Add($"{newItem.Name} - {newItem.Price} руб. x{newItem.Quantity} = {newItem.Total} руб.");
+                    listBoxCurrentOrder.Items.Add($"{newItem.Name} - {newItem.Price:F2} руб. x{newItem.Quantity} = {newItem.Total:F2} руб.");
                 }
 
                 UpdateOrderTotal();
@@ -204,7 +186,7 @@ namespace Система_учета_заказов_в_кафешке
         private void UpdateOrderTotal()
         {
             decimal total = currentOrderItems.Sum(i => i.Total);
-            labelOrderTotal.Text = $"Итого: {total} руб.";
+            labelOrderTotal.Text = $"Итого: {total:F2} руб.";
         }
 
         private void BtnCreateOrder_Click(object sender, EventArgs e)
@@ -217,26 +199,27 @@ namespace Система_учета_заказов_в_кафешке
             }
 
             int orderNumber = nextOrderNumber++;
-            var newOrder = new Order
+            decimal total = currentOrderItems.Sum(i => i.Total);
+
+            try
             {
-                OrderNumber = orderNumber,
-                Items = new List<OrderItem>(currentOrderItems),
-                Status = "Ожидает",
-                OrderTime = DateTime.Now,
-                Total = currentOrderItems.Sum(i => i.Total)
-            };
+                _db.CreateOrder(orderNumber, currentOrderItems, total);
 
-            orders.Add(newOrder);
+                currentOrderItems.Clear();
+                listBoxCurrentOrder.Items.Clear();
+                labelOrderTotal.Text = "Итого: 0 руб.";
 
-            currentOrderItems.Clear();
-            listBoxCurrentOrder.Items.Clear();
-            labelOrderTotal.Text = "Итого: 0 руб.";
+                MessageBox.Show($"Заказ №{orderNumber} создан! Ожидайте на мониторе статусов.",
+                    "Заказ создан", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-            MessageBox.Show($"Заказ №{orderNumber} создан! Ожидайте на мониторе статусов.",
-                "Заказ создан", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-            RefreshOrdersList();
-            RefreshKitchenView();
+                RefreshOrdersList();
+                RefreshKitchenView();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при создании заказа: {ex.Message}", "Ошибка",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void BtnCancelOrder_Click(object sender, EventArgs e)
@@ -265,6 +248,7 @@ namespace Система_учета_заказов_в_кафешке
 
         private void RefreshOrdersList()
         {
+            var orders = _db.GetAllOrders();
             dataGridViewActiveOrders.Rows.Clear();
             var activeOrders = orders.Where(o => o.Status != "Завершен" && o.Status != "Отменен");
 
@@ -276,13 +260,15 @@ namespace Система_учета_заказов_в_кафешке
                     items,
                     order.Status,
                     order.OrderTime.ToString("HH:mm"),
-                    $"{order.Total} руб."
+                    $"{order.Total:F2} руб."
                 );
             }
         }
 
         private void RefreshKitchenView()
         {
+            var orders = _db.GetAllOrders();
+
             dataGridViewPendingOrders.Rows.Clear();
             var pendingOrders = orders.Where(o => o.Status == "Ожидает");
             foreach (var order in pendingOrders)
@@ -303,7 +289,7 @@ namespace Система_учета_заказов_в_кафешке
                 dataGridViewInProgress.Rows.Add(
                     order.OrderNumber,
                     items,
-                    order.StartTime?.ToString("HH:mm") ?? "-"
+                    order.StartTime.HasValue ? order.StartTime.Value.ToString("HH:mm") : "-"
                 );
             }
         }
@@ -311,7 +297,6 @@ namespace Система_учета_заказов_в_кафешке
         private void RefreshMenuGrid()
         {
             dataGridViewMenu.Rows.Clear();
-
             var sortedMenu = menuItems.OrderBy(m => GetCategoryOrder(m.Category)).ThenBy(m => m.Name);
 
             foreach (var item in sortedMenu)
@@ -355,24 +340,6 @@ namespace Система_учета_заказов_в_кафешке
             }
         }
 
-        private void DataGridViewPendingOrders_CellClick(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.RowIndex >= 0)
-            {
-                dataGridViewPendingOrders.ClearSelection();
-                dataGridViewPendingOrders.Rows[e.RowIndex].Selected = true;
-            }
-        }
-
-        private void DataGridViewInProgress_CellClick(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.RowIndex >= 0)
-            {
-                dataGridViewInProgress.ClearSelection();
-                dataGridViewInProgress.Rows[e.RowIndex].Selected = true;
-            }
-        }
-
         private void BtnStartCooking_Click(object sender, EventArgs e)
         {
             if (dataGridViewPendingOrders.SelectedRows.Count == 0 && dataGridViewPendingOrders.CurrentRow == null)
@@ -394,17 +361,18 @@ namespace Система_учета_заказов_в_кафешке
             }
 
             int orderNumber = (int)selectedRow.Cells[0].Value;
-            var order = orders.FirstOrDefault(o => o.OrderNumber == orderNumber);
+            var order = _db.GetAllOrders().FirstOrDefault(o => o.OrderNumber == orderNumber);
 
             if (order != null && order.Status == "Ожидает")
             {
-                order.Status = "В работе";
-                order.StartTime = DateTime.Now;
-                RefreshKitchenView();
-                RefreshOrdersList();
-                RefreshDisplay();
-                MessageBox.Show($"Заказ №{orderNumber} начали готовить!",
-                    "Уведомление", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                if (_db.UpdateOrderStatus(order.Id, "В работе"))
+                {
+                    RefreshKitchenView();
+                    RefreshOrdersList();
+                    RefreshDisplay();
+                    MessageBox.Show($"Заказ №{orderNumber} начали готовить!",
+                        "Уведомление", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
             }
             else
             {
@@ -434,18 +402,19 @@ namespace Система_учета_заказов_в_кафешке
             }
 
             int orderNumber = (int)selectedRow.Cells[0].Value;
-            var order = orders.FirstOrDefault(o => o.OrderNumber == orderNumber);
+            var order = _db.GetAllOrders().FirstOrDefault(o => o.OrderNumber == orderNumber);
 
             if (order != null && order.Status == "В работе")
             {
-                order.Status = "Готов";
-                order.ReadyTime = DateTime.Now;
-                RefreshKitchenView();
-                RefreshOrdersList();
-                RefreshDisplay();
+                if (_db.UpdateOrderStatus(order.Id, "Готов"))
+                {
+                    RefreshKitchenView();
+                    RefreshOrdersList();
+                    RefreshDisplay();
 
-                MessageBox.Show($"Заказ №{orderNumber} готов! Клиент может забрать.",
-                    "Заказ готов", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show($"Заказ №{orderNumber} готов! Клиент может забрать.",
+                        "Заказ готов", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
             }
             else
             {
@@ -475,7 +444,7 @@ namespace Система_учета_заказов_в_кафешке
             }
 
             int orderNumber = (int)selectedRow.Cells[0].Value;
-            var order = orders.FirstOrDefault(o => o.OrderNumber == orderNumber);
+            var order = _db.GetAllOrders().FirstOrDefault(o => o.OrderNumber == orderNumber);
 
             if (order != null)
             {
@@ -484,13 +453,15 @@ namespace Система_учета_заказов_в_кафешке
 
                 if (result == DialogResult.Yes)
                 {
-                    order.Status = "Завершен";
-                    RefreshOrdersList();
-                    RefreshKitchenView();
-                    RefreshDisplay();
+                    if (_db.UpdateOrderStatus(order.Id, "Завершен"))
+                    {
+                        RefreshOrdersList();
+                        RefreshKitchenView();
+                        RefreshDisplay();
 
-                    MessageBox.Show($"Заказ №{orderNumber} завершен!",
-                        "Успешно", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show($"Заказ №{orderNumber} завершен!",
+                            "Успешно", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
                 }
             }
             else
@@ -502,6 +473,7 @@ namespace Система_учета_заказов_в_кафешке
         private void RefreshDisplay()
         {
             flowLayoutPanelOrders.Controls.Clear();
+            var orders = _db.GetAllOrders();
 
             if (orders.Count == 0)
             {
@@ -623,6 +595,7 @@ namespace Система_учета_заказов_в_кафешке
             DateTime end = dateTimePickerEnd.Value.Date.AddDays(1);
             string statusFilter = comboBoxStatusFilter.SelectedItem?.ToString();
 
+            var orders = _db.GetAllOrders();
             var filteredOrders = orders.Where(o => o.OrderTime >= start && o.OrderTime < end);
 
             if (statusFilter != "Все")
@@ -643,7 +616,7 @@ namespace Система_учета_заказов_в_кафешке
                     order.OrderTime.ToString("dd.MM.yyyy HH:mm"),
                     order.Status,
                     timeSpent.HasValue ? $"{timeSpent.Value.Minutes} мин" : "-",
-                    $"{order.Total} руб."
+                    $"{order.Total:F2} руб."
                 );
             }
 
@@ -688,28 +661,25 @@ namespace Система_учета_заказов_в_кафешке
                     return;
                 }
 
-                string newItemDisplay = $"{txtItemName.Text} - {numericPrice.Value} руб.";
-
                 if (!menuItems.Any(m => m.Name == txtItemName.Text))
                 {
-                    menuItems.Add(new MenuItem
+                    if (_db.AddMenuItem(txtItemName.Text, category, numericPrice.Value))
                     {
-                        Id = nextMenuItemId++,
-                        Name = txtItemName.Text,
-                        Category = category,
-                        Price = numericPrice.Value
-                    });
+                        LoadMenuFromDatabase();
+                        RefreshMenuGrid();
 
-                    listBoxAvailableItems.Items.Add(newItemDisplay);
+                        MessageBox.Show($"Позиция меню добавлена в категорию \"{category}\"", "Успешно",
+                            MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                    RefreshMenuGrid();
-
-                    MessageBox.Show($"Позиция меню добавлена в категорию \"{category}\"", "Успешно",
-                        MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                    txtItemName.Clear();
-                    numericPrice.Value = 0;
-                    comboBoxCategory.SelectedIndex = 0;
+                        txtItemName.Clear();
+                        numericPrice.Value = 0;
+                        comboBoxCategory.SelectedIndex = 0;
+                    }
+                    else
+                    {
+                        MessageBox.Show("Ошибка при добавлении позиции", "Ошибка",
+                            MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
                 else
                 {
@@ -737,16 +707,21 @@ namespace Система_учета_заказов_в_кафешке
             if (!string.IsNullOrWhiteSpace(txtUsername.Text) &&
                 !string.IsNullOrWhiteSpace(txtPassword.Text))
             {
-                dataGridViewUsers.Rows.Add(
-                    dataGridViewUsers.Rows.Count + 1,
-                    txtUsername.Text,
-                    comboBoxRole.SelectedItem?.ToString()
-                );
-                MessageBox.Show("Пользователь сохранен", "Успешно",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
-                txtUsername.Clear();
-                txtPassword.Clear();
-                comboBoxRole.SelectedIndex = 0;
+                string role = comboBoxRole.SelectedItem?.ToString();
+                if (_db.AddUser(txtUsername.Text, txtPassword.Text, role))
+                {
+                    LoadUsersFromDatabase();
+                    MessageBox.Show("Пользователь сохранен", "Успешно",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    txtUsername.Clear();
+                    txtPassword.Clear();
+                    comboBoxRole.SelectedIndex = 0;
+                }
+                else
+                {
+                    MessageBox.Show("Пользователь с таким именем уже существует", "Ошибка",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
             else
             {
@@ -774,41 +749,29 @@ namespace Система_учета_заказов_в_кафешке
 
         private void BtnSalesReport_Click(object sender, EventArgs e)
         {
-            var completedOrders = orders.Where(o => o.Status == "Завершен");
-            decimal totalRevenue = completedOrders.Sum(o => o.Total);
-            int totalOrders = completedOrders.Count();
+            decimal totalRevenue = _db.GetTotalRevenue();
+            int totalOrders = _db.GetCompletedOrdersCount();
             decimal avgCheck = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
             GenerateReport("Отчет по продажам",
-                $"Общая выручка: {totalRevenue} руб.\n" +
+                $"Общая выручка: {totalRevenue:F2} руб.\n" +
                 $"Количество заказов: {totalOrders}\n" +
                 $"Средний чек: {avgCheck:F2} руб.");
         }
 
         private void BtnPopularItemsReport_Click(object sender, EventArgs e)
         {
-            var itemCounts = new Dictionary<string, int>();
-            foreach (var order in orders)
-            {
-                foreach (var item in order.Items)
-                {
-                    if (itemCounts.ContainsKey(item.Name))
-                        itemCounts[item.Name] += item.Quantity;
-                    else
-                        itemCounts[item.Name] = item.Quantity;
-                }
-            }
+            var popularItems = _db.GetPopularItems(5);
 
-            if (itemCounts.Count == 0)
+            if (popularItems.Count == 0)
             {
                 GenerateReport("Популярные блюда", "Нет данных о заказах");
                 return;
             }
 
-            var popular = itemCounts.OrderByDescending(x => x.Value).Take(5);
             string content = "Популярные блюда:\n";
             int rank = 1;
-            foreach (var item in popular)
+            foreach (var item in popularItems)
             {
                 content += $"{rank++}. {item.Key} - {item.Value} шт.\n";
             }
@@ -818,13 +781,14 @@ namespace Система_учета_заказов_в_кафешке
 
         private void BtnCookingTimeReport_Click(object sender, EventArgs e)
         {
-            var completedOrders = orders.Where(o => o.ReadyTime.HasValue && o.Status == "Завершен");
-            if (completedOrders.Any())
+            double avgTime = _db.GetAverageCookingTime();
+            int completedOrders = _db.GetCompletedOrdersCount();
+
+            if (completedOrders > 0)
             {
-                var avgTime = completedOrders.Average(o => (o.ReadyTime.Value - o.OrderTime).TotalMinutes);
                 GenerateReport("Время приготовления",
                     $"Среднее время приготовления: {avgTime:F0} минут\n" +
-                    $"Всего выполнено заказов: {completedOrders.Count()}");
+                    $"Всего выполнено заказов: {completedOrders}");
             }
             else
             {
@@ -834,18 +798,14 @@ namespace Система_учета_заказов_в_кафешке
 
         private void BtnShiftReport_Click(object sender, EventArgs e)
         {
-            var todayOrders = orders.Where(o => o.OrderTime.Date == DateTime.Today && o.Status == "Завершен");
-            int total = todayOrders.Count();
-            decimal revenue = todayOrders.Sum(o => o.Total);
-
-            var completedToday = todayOrders.Where(o => o.ReadyTime.HasValue);
-            double avgTime = completedToday.Any() ?
-                completedToday.Average(o => (o.ReadyTime.Value - o.OrderTime).TotalMinutes) : 0;
+            int todayOrders = _db.GetCompletedOrdersCount(DateTime.Today, DateTime.Today);
+            decimal revenue = _db.GetTotalRevenue(DateTime.Today, DateTime.Today);
+            double avgTime = _db.GetAverageCookingTime();
 
             GenerateReport("Отчет по смене",
                 $"Дата: {DateTime.Now:dd.MM.yyyy}\n" +
-                $"Выручка: {revenue} руб.\n" +
-                $"Количество заказов: {total}\n" +
+                $"Выручка: {revenue:F2} руб.\n" +
+                $"Количество заказов: {todayOrders}\n" +
                 $"Среднее время ожидания: {(avgTime > 0 ? $"{avgTime:F0}" : "—")} мин");
         }
 
@@ -854,9 +814,16 @@ namespace Система_учета_заказов_в_кафешке
             Application.Exit();
         }
 
+        private void ChangeUserToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var loginForm = new Forms.LoginForm();
+            loginForm.Show();
+            this.Close();
+        }
+
         private void AboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Система учета заказов в кафе\nВерсия 2.0\nСамообслуживание\n\n" +
+            MessageBox.Show("Система учета заказов в кафе\nВерсия 3.0\nСамообслуживание\n\n" +
                 "Клиент видит готовые заказы на мониторе и забирает самостоятельно\n\n" +
                 "Цвета статусов на мониторе:\n" +
                 "Желтый - заказ ожидает\n" +
@@ -876,29 +843,11 @@ namespace Система_учета_заказов_в_кафешке
 
         private void RefreshAllToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            LoadMenuFromDatabase();
             RefreshOrdersList();
             RefreshKitchenView();
             RefreshDisplay();
             BtnSearch_Click(sender, e);
         }
-    }
-
-    public class OrderItem
-    {
-        public string Name { get; set; }
-        public decimal Price { get; set; }
-        public int Quantity { get; set; }
-        public decimal Total { get; set; }
-    }
-
-    public class Order
-    {
-        public int OrderNumber { get; set; }
-        public List<OrderItem> Items { get; set; }
-        public string Status { get; set; }
-        public DateTime OrderTime { get; set; }
-        public DateTime? StartTime { get; set; }
-        public DateTime? ReadyTime { get; set; }
-        public decimal Total { get; set; }
     }
 }

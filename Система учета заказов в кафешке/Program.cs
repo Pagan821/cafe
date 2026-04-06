@@ -3,20 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Система_учета_заказов_в_кафешке.Forms;
 
 namespace Система_учета_заказов_в_кафешке
 {
-    internal static class Program
+    static class Program
     {
-        /// <summary>
-        /// Главная точка входа для приложения.
-        /// </summary>
         [STAThread]
         static void Main()
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainForm());
+
+            // Показываем форму входа
+            var loginForm = new LoginForm();
+            Application.Run(loginForm);
         }
     }
 }

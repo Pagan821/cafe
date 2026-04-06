@@ -198,18 +198,17 @@ namespace Система_учета_заказов_в_кафешке
                 return;
             }
 
-            int orderNumber = nextOrderNumber++;
             decimal total = currentOrderItems.Sum(i => i.Total);
 
             try
             {
-                _db.CreateOrder(orderNumber, currentOrderItems, total);
+                _db.CreateOrder(currentOrderItems, total); 
 
                 currentOrderItems.Clear();
                 listBoxCurrentOrder.Items.Clear();
                 labelOrderTotal.Text = "Итого: 0 руб.";
 
-                MessageBox.Show($"Заказ №{orderNumber} создан! Ожидайте на мониторе статусов.",
+                MessageBox.Show($"Заказ создан! Ожидайте на мониторе статусов.",
                     "Заказ создан", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                 RefreshOrdersList();

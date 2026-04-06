@@ -323,7 +323,7 @@ namespace Система_учета_заказов_в_кафешке.Database
         }
 
         // Методы для работы с заказами
-        public int CreateOrder(int orderNumber, List<OrderItem> items, decimal total)
+        public int CreateOrder(List<OrderItem> items, decimal total)
         {
             using (var connection = new SQLiteConnection(_connectionString))
             {
@@ -333,6 +333,14 @@ namespace Система_учета_заказов_в_кафешке.Database
                 {
                     try
                     {
+                        // Получаем следующий номер заказа
+                        string getMaxNumber = "SELECT COALESCE(MAX(OrderNumber), 0) FROM Orders";
+                        int nextNumber;
+                        using (var cmd = new SQLiteCommand(getMaxNumber, connection))
+                        {
+                            nextNumber = Convert.ToInt32(cmd.ExecuteScalar()) + 1;
+                        }
+
                         string insertOrder = @"
                             INSERT INTO Orders (OrderNumber, Status, OrderTime, Total, CookId)
                             VALUES (@orderNumber, @status, @orderTime, @total, NULL);
@@ -341,7 +349,7 @@ namespace Система_учета_заказов_в_кафешке.Database
                         int orderId;
                         using (var cmd = new SQLiteCommand(insertOrder, connection, transaction))
                         {
-                            cmd.Parameters.AddWithValue("@orderNumber", orderNumber);
+                            cmd.Parameters.AddWithValue("@orderNumber", nextNumber);
                             cmd.Parameters.AddWithValue("@status", "Ожидает");
                             cmd.Parameters.AddWithValue("@orderTime", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                             cmd.Parameters.AddWithValue("@total", total);
@@ -349,8 +357,8 @@ namespace Система_учета_заказов_в_кафешке.Database
                         }
 
                         string insertItem = @"
-                            INSERT INTO OrderItems (OrderId, MenuItemId, Name, Price, Quantity, Total)
-                            VALUES (@orderId, @menuItemId, @name, @price, @quantity, @total)";
+                    INSERT INTO OrderItems (OrderId, MenuItemId, Name, Price, Quantity, Total)
+                    VALUES (@orderId, @menuItemId, @name, @price, @quantity, @total)";
 
                         foreach (var item in items)
                         {

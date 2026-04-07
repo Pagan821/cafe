@@ -10,10 +10,11 @@ using MenuItemModel = Система_учета_заказов_в_кафешке
 
 namespace Система_учета_заказов_в_кафешке.Database
 {
-    public class DatabaseService
+    public class DatabaseService : IDisposable
     {
         private readonly string _connectionString;
         private static DatabaseService _instance;
+        private bool _disposed = false;
 
         public static DatabaseService Instance
         {
@@ -32,8 +33,27 @@ namespace Система_учета_заказов_в_кафешке.Database
             if (!Directory.Exists(directory))
                 Directory.CreateDirectory(directory);
 
-            _connectionString = $"Data Source={dbPath}";
+            _connectionString = $"Data Source={dbPath};Version=3;";
             InitializeDatabase();
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    // Освобождаем управляемые ресурсы
+                    // Так как мы используем using везде, дополнительные действия не требуются
+                }
+                _disposed = true;
+            }
         }
 
         private void InitializeDatabase()
@@ -53,8 +73,8 @@ namespace Система_учета_заказов_в_кафешке.Database
                         IsActive INTEGER NOT NULL DEFAULT 1
                     )";
 
-                using (var cmd1 = new SQLiteCommand(createUsersTable, connection))
-                    cmd1.ExecuteNonQuery();
+                using (var cmd = new SQLiteCommand(createUsersTable, connection))
+                    cmd.ExecuteNonQuery();
 
                 // Таблица меню
                 string createMenuTable = @"
@@ -66,8 +86,8 @@ namespace Система_учета_заказов_в_кафешке.Database
                         IsAvailable INTEGER NOT NULL DEFAULT 1
                     )";
 
-                using (var cmd2 = new SQLiteCommand(createMenuTable, connection))
-                    cmd2.ExecuteNonQuery();
+                using (var cmd = new SQLiteCommand(createMenuTable, connection))
+                    cmd.ExecuteNonQuery();
 
                 // Таблица заказов
                 string createOrdersTable = @"
@@ -82,8 +102,8 @@ namespace Система_учета_заказов_в_кафешке.Database
                         CookId INTEGER
                     )";
 
-                using (var cmd3 = new SQLiteCommand(createOrdersTable, connection))
-                    cmd3.ExecuteNonQuery();
+                using (var cmd = new SQLiteCommand(createOrdersTable, connection))
+                    cmd.ExecuteNonQuery();
 
                 // Таблица позиций заказа
                 string createOrderItemsTable = @"
@@ -97,8 +117,8 @@ namespace Система_учета_заказов_в_кафешке.Database
                         Total REAL NOT NULL
                     )";
 
-                using (var cmd4 = new SQLiteCommand(createOrderItemsTable, connection))
-                    cmd4.ExecuteNonQuery();
+                using (var cmd = new SQLiteCommand(createOrderItemsTable, connection))
+                    cmd.ExecuteNonQuery();
 
                 // Добавление тестовых данных
                 InsertTestData(connection);
@@ -187,7 +207,8 @@ namespace Система_учета_заказов_в_кафешке.Database
             }
         }
 
-        // Методы для работы с пользователями
+        // ==================== МЕТОДЫ ДЛЯ РАБОТЫ С ПОЛЬЗОВАТЕЛЯМИ ====================
+
         public bool AuthenticateUser(string username, string password, out string role)
         {
             role = null;
@@ -268,7 +289,8 @@ namespace Система_учета_заказов_в_кафешке.Database
             }
         }
 
-        // Методы для работы с меню
+        // ==================== МЕТОДЫ ДЛЯ РАБОТЫ С МЕНЮ ====================
+
         public List<MenuItemModel> GetAllMenuItems()
         {
             var items = new List<MenuItemModel>();
@@ -322,7 +344,96 @@ namespace Система_учета_заказов_в_кафешке.Database
             }
         }
 
-        // Методы для работы с заказами
+        public bool UpdateMenuItem(int id, string name, string category, decimal price)
+        {
+            using (var connection = new SQLiteConnection(_connectionString))
+            {
+                connection.Open();
+
+                string query = @"UPDATE MenuItems 
+                                SET Name = @name, 
+                                    Category = @category, 
+                                    Price = @price 
+                                WHERE Id = @id";
+
+                using (var cmd = new SQLiteCommand(query, connection))
+                {
+                    cmd.Parameters.AddWithValue("@id", id);
+                    cmd.Parameters.AddWithValue("@name", name);
+                    cmd.Parameters.AddWithValue("@category", category);
+                    cmd.Parameters.AddWithValue("@price", price);
+
+                    try
+                    {
+                        return cmd.ExecuteNonQuery() > 0;
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        public bool DeleteMenuItem(int id)
+        {
+            using (var connection = new SQLiteConnection(_connectionString))
+            {
+                connection.Open();
+
+                // Проверяем, используется ли блюдо в заказах
+                string checkQuery = "SELECT COUNT(*) FROM OrderItems WHERE MenuItemId = @id";
+                using (var checkCmd = new SQLiteCommand(checkQuery, connection))
+                {
+                    checkCmd.Parameters.AddWithValue("@id", id);
+                    long count = (long)checkCmd.ExecuteScalar();
+
+                    if (count > 0)
+                    {
+                        return false; // Нельзя удалить, так как используется в заказах
+                    }
+                }
+
+                string query = "DELETE FROM MenuItems WHERE Id = @id";
+                using (var cmd = new SQLiteCommand(query, connection))
+                {
+                    cmd.Parameters.AddWithValue("@id", id);
+                    return cmd.ExecuteNonQuery() > 0;
+                }
+            }
+        }
+
+        public MenuItemModel GetMenuItemById(int id)
+        {
+            using (var connection = new SQLiteConnection(_connectionString))
+            {
+                connection.Open();
+
+                string query = "SELECT Id, Name, Category, Price, IsAvailable FROM MenuItems WHERE Id = @id";
+                using (var cmd = new SQLiteCommand(query, connection))
+                {
+                    cmd.Parameters.AddWithValue("@id", id);
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            return new MenuItemModel
+                            {
+                                Id = reader.GetInt32(0),
+                                Name = reader.GetString(1),
+                                Category = reader.GetString(2),
+                                Price = reader.GetDecimal(3),
+                                IsAvailable = reader.GetInt32(4) == 1
+                            };
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        // ==================== МЕТОДЫ ДЛЯ РАБОТЫ С ЗАКАЗАМИ ====================
+
         public int CreateOrder(List<OrderItem> items, decimal total)
         {
             using (var connection = new SQLiteConnection(_connectionString))
@@ -357,8 +468,8 @@ namespace Система_учета_заказов_в_кафешке.Database
                         }
 
                         string insertItem = @"
-                    INSERT INTO OrderItems (OrderId, MenuItemId, Name, Price, Quantity, Total)
-                    VALUES (@orderId, @menuItemId, @name, @price, @quantity, @total)";
+                            INSERT INTO OrderItems (OrderId, MenuItemId, Name, Price, Quantity, Total)
+                            VALUES (@orderId, @menuItemId, @name, @price, @quantity, @total)";
 
                         foreach (var item in items)
                         {
@@ -502,7 +613,8 @@ namespace Система_учета_заказов_в_кафешке.Database
             }
         }
 
-        // Статистика для отчетов
+        // ==================== МЕТОДЫ ДЛЯ ОТЧЕТОВ ====================
+
         public decimal GetTotalRevenue(DateTime? startDate = null, DateTime? endDate = null)
         {
             using (var connection = new SQLiteConnection(_connectionString))
@@ -551,9 +663,9 @@ namespace Система_учета_заказов_в_кафешке.Database
             }
         }
 
-        public System.Collections.Generic.Dictionary<string, int> GetPopularItems(int topCount = 5)
+        public Dictionary<string, int> GetPopularItems(int topCount = 5)
         {
-            var result = new System.Collections.Generic.Dictionary<string, int>();
+            var result = new Dictionary<string, int>();
             using (var connection = new SQLiteConnection(_connectionString))
             {
                 connection.Open();

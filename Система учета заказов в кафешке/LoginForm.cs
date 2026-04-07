@@ -12,6 +12,15 @@ namespace Система_учета_заказов_в_кафешке.Forms
         {
             _db = DatabaseService.Instance;
             InitializeComponent();
+            this.FormClosing += LoginForm_FormClosing;
+        }
+
+        private void LoginForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (_db != null && _db is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
         }
 
         private void btnLogin_Click(object sender, EventArgs e)
@@ -34,7 +43,10 @@ namespace Система_учета_заказов_в_кафешке.Forms
 
                 MainForm mainForm = new MainForm(username, role);
                 mainForm.Show();
+
                 this.Hide();
+
+                mainForm.FormClosed += (s, args) => this.Close();
             }
             else
             {

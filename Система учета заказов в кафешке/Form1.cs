@@ -17,6 +17,7 @@ namespace Система_учета_заказов_в_кафешке
         private int nextOrderNumber = 1;
         private List<OrderItemModel> currentOrderItems = new List<OrderItemModel>();
         private List<MenuItemModel> menuItems = new List<MenuItemModel>();
+        private int? selectedMenuItemId = null;
 
         public MainForm(string username, string role)
         {
@@ -27,6 +28,35 @@ namespace Система_учета_заказов_в_кафешке
             InitializeForm();
             LoadDataFromDatabase();
         }
+
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+
+            if (timerClock != null)
+            {
+                timerClock.Stop();
+                timerClock.Dispose();
+            }
+
+            if (timerRefreshDisplay != null)
+            {
+                timerRefreshDisplay.Stop();
+                timerRefreshDisplay.Dispose();
+            }
+            if (_db != null && _db is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
+
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+        }
+
+
+       
+
 
         private void InitializeForm()
         {
@@ -39,6 +69,7 @@ namespace Система_учета_заказов_в_кафешке
 
             toolStripStatusUser.Text = $"Пользователь: {_currentUser} ({_currentRole})";
 
+            LoadDataFromDatabase();
             // Настройка прав доступа
             if (_currentRole != "Администратор")
             {
@@ -77,6 +108,8 @@ namespace Система_учета_заказов_в_кафешке
             btnSearch.Click += BtnSearch_Click;
             btnExport.Click += BtnExport_Click;
             btnSaveMenuItem.Click += BtnSaveMenuItem_Click;
+            btnUpdateMenuItem.Click += BtnUpdateMenuItem_Click;
+            btnDeleteMenuItem.Click += BtnDeleteMenuItem_Click;
             btnSaveUser.Click += BtnSaveUser_Click;
             btnAddMenuItem.Click += BtnAddMenuItem_Click;
             btnAddUser.Click += BtnAddUser_Click;
@@ -95,8 +128,20 @@ namespace Система_учета_заказов_в_кафешке
             }
 
             dataGridViewMenu.CellClick += DataGridViewMenu_CellClick;
+            dataGridViewMenu.CellDoubleClick += DataGridViewMenu_CellDoubleClick;
+            tabControlMain.SelectedIndexChanged += TabControlMain_SelectedIndexChanged;
 
             RefreshMenuGrid();
+        }
+
+        // Обработчик выхода из программы
+        private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show("Вы уверены, что хотите выйти из программы?",
+                "Выход", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                Application.Exit();
+            }
         }
 
         private void LoadDataFromDatabase()
@@ -110,12 +155,16 @@ namespace Система_учета_заказов_в_кафешке
         private void LoadMenuFromDatabase()
         {
             menuItems = _db.GetAllMenuItems();
+
             listBoxAvailableItems.Items.Clear();
-            foreach (var item in menuItems)
+            foreach (var item in menuItems.Where(m => m.IsAvailable))
             {
                 listBoxAvailableItems.Items.Add($"{item.Name} - {item.Price} руб.");
             }
+
+            RefreshMenuGrid();
         }
+
 
         private void LoadUsersFromDatabase()
         {
@@ -202,7 +251,7 @@ namespace Система_учета_заказов_в_кафешке
 
             try
             {
-                _db.CreateOrder(currentOrderItems, total); 
+                _db.CreateOrder(currentOrderItems, total);
 
                 currentOrderItems.Clear();
                 listBoxCurrentOrder.Items.Clear();
@@ -304,7 +353,8 @@ namespace Система_учета_заказов_в_кафешке
                     item.Id,
                     item.Name,
                     item.Category,
-                    $"{item.Price:F2}"
+                    $"{item.Price:F2}",
+                    item.IsAvailable ? "Да" : "Нет"
                 );
             }
         }
@@ -327,6 +377,7 @@ namespace Система_учета_заказов_в_кафешке
             if (e.RowIndex >= 0)
             {
                 DataGridViewRow row = dataGridViewMenu.Rows[e.RowIndex];
+                selectedMenuItemId = (int)row.Cells[0].Value;
                 txtItemName.Text = row.Cells[1].Value?.ToString();
                 numericPrice.Value = decimal.Parse(row.Cells[3].Value?.ToString() ?? "0");
 
@@ -336,6 +387,57 @@ namespace Система_учета_заказов_в_кафешке
                     int index = comboBoxCategory.Items.IndexOf(category);
                     if (index >= 0) comboBoxCategory.SelectedIndex = index;
                 }
+
+                btnSaveMenuItem.Enabled = false;
+                btnUpdateMenuItem.Enabled = true;
+                btnDeleteMenuItem.Enabled = true;
+
+                labelItemName.Text = "Название блюда (редактирование):";
+                groupBoxMenuItemDetails.Text = "Редактирование позиции меню";
+            }
+        }
+
+        private void DataGridViewMenu_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0)
+            {
+                DataGridViewRow row = dataGridViewMenu.Rows[e.RowIndex];
+                selectedMenuItemId = (int)row.Cells[0].Value;
+                txtItemName.Text = row.Cells[1].Value?.ToString();
+                numericPrice.Value = decimal.Parse(row.Cells[3].Value?.ToString() ?? "0");
+
+                string category = row.Cells[2].Value?.ToString();
+                if (category != null)
+                {
+                    int index = comboBoxCategory.Items.IndexOf(category);
+                    if (index >= 0) comboBoxCategory.SelectedIndex = index;
+                }
+
+                btnSaveMenuItem.Enabled = false;
+                btnUpdateMenuItem.Enabled = true;
+                btnDeleteMenuItem.Enabled = true;
+
+                labelItemName.Text = "Название блюда (редактирование):";
+                groupBoxMenuItemDetails.Text = "Редактирование позиции меню";
+            }
+        }
+
+        private void TabControlMain_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (tabControlMain.SelectedTab == tabPageAdmin)
+            {
+                LoadMenuFromDatabase();
+                LoadUsersFromDatabase();
+            }
+            else if (tabControlMain.SelectedTab == tabPageOrders ||
+                     tabControlMain.SelectedTab == tabPageKitchen)
+            {
+                RefreshOrdersList();
+                RefreshKitchenView();
+            }
+            else if (tabControlMain.SelectedTab == tabPageDisplay)
+            {
+                RefreshDisplay();
             }
         }
 
@@ -660,19 +762,16 @@ namespace Система_учета_заказов_в_кафешке
                     return;
                 }
 
-                if (!menuItems.Any(m => m.Name == txtItemName.Text))
+                if (!menuItems.Any(m => m.Name.Equals(txtItemName.Text, StringComparison.OrdinalIgnoreCase)))
                 {
                     if (_db.AddMenuItem(txtItemName.Text, category, numericPrice.Value))
                     {
                         LoadMenuFromDatabase();
-                        RefreshMenuGrid();
 
-                        MessageBox.Show($"Позиция меню добавлена в категорию \"{category}\"", "Успешно",
-                            MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show($"Позиция меню \"{txtItemName.Text}\" добавлена в категорию \"{category}\"",
+                            "Успешно", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                        txtItemName.Clear();
-                        numericPrice.Value = 0;
-                        comboBoxCategory.SelectedIndex = 0;
+                        ClearMenuItemForm();
                     }
                     else
                     {
@@ -693,12 +792,135 @@ namespace Система_учета_заказов_в_кафешке
             }
         }
 
-        private void BtnAddMenuItem_Click(object sender, EventArgs e)
+        private void BtnUpdateMenuItem_Click(object sender, EventArgs e)
         {
+            if (!selectedMenuItemId.HasValue)
+            {
+                MessageBox.Show("Пожалуйста, выберите блюдо для редактирования",
+                    "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtItemName.Text) || numericPrice.Value <= 0)
+            {
+                MessageBox.Show("Введите корректное название блюда и цену",
+                    "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string category = comboBoxCategory.SelectedItem?.ToString();
+            if (string.IsNullOrEmpty(category))
+            {
+                MessageBox.Show("Пожалуйста, выберите категорию",
+                    "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // Проверяем, не существует ли уже блюдо с таким именем (кроме текущего)
+            var existingItem = menuItems.FirstOrDefault(m =>
+                m.Name.Equals(txtItemName.Text, StringComparison.OrdinalIgnoreCase) &&
+                m.Id != selectedMenuItemId.Value);
+
+            if (existingItem != null)
+            {
+                MessageBox.Show("Блюдо с таким названием уже существует",
+                    "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            DialogResult result = MessageBox.Show($"Обновить блюдо \"{txtItemName.Text}\"?",
+                "Подтверждение", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+            if (result == DialogResult.Yes)
+            {
+                if (_db.UpdateMenuItem(selectedMenuItemId.Value, txtItemName.Text, category, numericPrice.Value))
+                {
+                    // Полностью перезагружаем меню из базы
+                    LoadMenuFromDatabase();
+
+                    MessageBox.Show("Блюдо успешно обновлено!",
+                        "Успешно", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                    ClearMenuItemForm();
+                }
+                else
+                {
+                    MessageBox.Show("Ошибка при обновлении блюда",
+                        "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+
+        private void BtnDeleteMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!selectedMenuItemId.HasValue)
+            {
+                MessageBox.Show("Пожалуйста, выберите блюдо для удаления",
+                    "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var item = menuItems.FirstOrDefault(m => m.Id == selectedMenuItemId.Value);
+            if (item == null)
+            {
+                MessageBox.Show("Блюдо не найдено",
+                    "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            DialogResult result = MessageBox.Show(
+                $"Вы уверены, что хотите удалить блюдо \"{item.Name}\"?\n\n" +
+                "Внимание: Если это блюдо использовалось в заказах, удаление будет невозможно.",
+                "Подтверждение удаления",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning);
+
+            if (result == DialogResult.Yes)
+            {
+                if (_db.DeleteMenuItem(selectedMenuItemId.Value))
+                {
+                    // Полностью перезагружаем меню из базы
+                    LoadMenuFromDatabase();
+
+                    MessageBox.Show("Блюдо успешно удалено!",
+                        "Успешно", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                    ClearMenuItemForm();
+                }
+                else
+                {
+                    MessageBox.Show(
+                        "Невозможно удалить блюдо, так как оно используется в существующих заказах.\n\n" +
+                        "Рекомендуется вместо удаления сделать блюдо недоступным.",
+                        "Невозможно удалить",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                }
+            }
+        }
+
+
+        private void ClearMenuItemForm()
+        {
+            selectedMenuItemId = null;
             txtItemName.Clear();
             numericPrice.Value = 0;
             comboBoxCategory.SelectedIndex = 0;
+
+            btnSaveMenuItem.Enabled = true;
+            btnUpdateMenuItem.Enabled = false;
+            btnDeleteMenuItem.Enabled = false;
+
+            labelItemName.Text = "Название блюда:";
+            groupBoxMenuItemDetails.Text = "Детали позиции";
+
             txtItemName.Focus();
+        }
+
+        private void BtnAddMenuItem_Click(object sender, EventArgs e)
+        {
+            ClearMenuItemForm();
         }
 
         private void BtnSaveUser_Click(object sender, EventArgs e)
@@ -808,11 +1030,7 @@ namespace Система_учета_заказов_в_кафешке
                 $"Среднее время ожидания: {(avgTime > 0 ? $"{avgTime:F0}" : "—")} мин");
         }
 
-        private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Application.Exit();
-        }
-
+       
         private void ChangeUserToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var loginForm = new Forms.LoginForm();
@@ -848,5 +1066,7 @@ namespace Система_учета_заказов_в_кафешке
             RefreshDisplay();
             BtnSearch_Click(sender, e);
         }
+
+        
     }
 }

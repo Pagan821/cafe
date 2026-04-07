@@ -15,9 +15,7 @@ namespace Система_учета_заказов_в_кафешке
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            // Показываем форму входа
-            var loginForm = new LoginForm();
-            Application.Run(loginForm);
+            Application.Run(new LoginForm());
         }
     }
 }

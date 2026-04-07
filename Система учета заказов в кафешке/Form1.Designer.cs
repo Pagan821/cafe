@@ -20,7 +20,7 @@
             base.Dispose(disposing);
         }
 
-        #region Код автоматически сгенерирован
+        #region код автоматически сгенерирован в Windows Form
 
         /// <summary>
         /// Required method for Designer support - do not modify
@@ -29,7 +29,6 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.tabControlMain = new System.Windows.Forms.TabControl();
             this.tabPageOrders = new System.Windows.Forms.TabPage();
             this.splitContainerOrders = new System.Windows.Forms.SplitContainer();
@@ -100,6 +99,7 @@
             this.MenuItemName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.MenuItemCategory = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.MenuItemPrice = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.MenuItemIsAvailable = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.btnAddMenuItem = new System.Windows.Forms.Button();
             this.groupBoxMenuItemDetails = new System.Windows.Forms.GroupBox();
             this.txtItemName = new System.Windows.Forms.TextBox();
@@ -109,6 +109,8 @@
             this.numericPrice = new System.Windows.Forms.NumericUpDown();
             this.labelPrice = new System.Windows.Forms.Label();
             this.btnSaveMenuItem = new System.Windows.Forms.Button();
+            this.btnUpdateMenuItem = new System.Windows.Forms.Button();
+            this.btnDeleteMenuItem = new System.Windows.Forms.Button();
             this.tabPageUsers = new System.Windows.Forms.TabPage();
             this.splitContainerUsers = new System.Windows.Forms.SplitContainer();
             this.groupBoxUserList = new System.Windows.Forms.GroupBox();
@@ -265,32 +267,6 @@
             // listBoxAvailableItems
             // 
             this.listBoxAvailableItems.FormattingEnabled = true;
-            this.listBoxAvailableItems.Items.AddRange(new object[] {
-            "Капучино - 180 руб.",
-            "Латте - 200 руб.",
-            "Эспрессо - 120 руб.",
-            "Чай черный - 100 руб.",
-            "Чай зеленый - 100 руб.",
-            "Яблочный сок - 89 руб.",
-            "Апельсиновый сок - 89 руб.",
-            "Ананасовый сок - 89 руб.",
-            "Сок Мультифрукт - 96 руб.",
-            "Грушевый лимонад - 94 руб.",
-            "Круассан - 150 руб.",
-            "Чизкейк - 250 руб.",
-            "Тирамису - 280 руб.",
-            "Сэндвич с курицей - 220 руб.",
-            "Сэндвич с говядиной - 224 руб.",
-            "Салат Цезарь - 320 руб.",
-            "Чизбургер - 367 руб.",
-            "Классический бургер - 242 руб.",
-            "Крабсбургер - 344 руб.",
-            "Чикен Бургер - 252 руб.",
-            "Черный Бургер - 262 руб.",
-            "Пицца 4 сыра - 489 руб.",
-            "Пицца Маргарита - 462 руб.",
-            "Пицца Пеперони - 469 руб.",
-            "Пицца классическая - 400 руб."});
             this.listBoxAvailableItems.Location = new System.Drawing.Point(15, 50);
             this.listBoxAvailableItems.Name = "listBoxAvailableItems";
             this.listBoxAvailableItems.Size = new System.Drawing.Size(420, 134);
@@ -938,7 +914,8 @@
             this.MenuItemId,
             this.MenuItemName,
             this.MenuItemCategory,
-            this.MenuItemPrice});
+            this.MenuItemPrice,
+            this.MenuItemIsAvailable});
             this.dataGridViewMenu.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridViewMenu.Location = new System.Drawing.Point(3, 16);
             this.dataGridViewMenu.Name = "dataGridViewMenu";
@@ -975,6 +952,13 @@
             this.MenuItemPrice.Name = "MenuItemPrice";
             this.MenuItemPrice.ReadOnly = true;
             // 
+            // MenuItemIsAvailable
+            // 
+            this.MenuItemIsAvailable.HeaderText = "Доступно";
+            this.MenuItemIsAvailable.Name = "MenuItemIsAvailable";
+            this.MenuItemIsAvailable.ReadOnly = true;
+            this.MenuItemIsAvailable.Width = 80;
+            // 
             // btnAddMenuItem
             // 
             this.btnAddMenuItem.Dock = System.Windows.Forms.DockStyle.Bottom;
@@ -994,6 +978,8 @@
             this.groupBoxMenuItemDetails.Controls.Add(this.numericPrice);
             this.groupBoxMenuItemDetails.Controls.Add(this.labelPrice);
             this.groupBoxMenuItemDetails.Controls.Add(this.btnSaveMenuItem);
+            this.groupBoxMenuItemDetails.Controls.Add(this.btnUpdateMenuItem);
+            this.groupBoxMenuItemDetails.Controls.Add(this.btnDeleteMenuItem);
             this.groupBoxMenuItemDetails.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBoxMenuItemDetails.Location = new System.Drawing.Point(0, 0);
             this.groupBoxMenuItemDetails.Name = "groupBoxMenuItemDetails";
@@ -1073,6 +1059,28 @@
             this.btnSaveMenuItem.TabIndex = 0;
             this.btnSaveMenuItem.Text = "Сохранить";
             this.btnSaveMenuItem.UseVisualStyleBackColor = false;
+            // 
+            // btnUpdateMenuItem
+            // 
+            this.btnUpdateMenuItem.BackColor = System.Drawing.Color.LightBlue;
+            this.btnUpdateMenuItem.Enabled = false;
+            this.btnUpdateMenuItem.Location = new System.Drawing.Point(180, 260);
+            this.btnUpdateMenuItem.Name = "btnUpdateMenuItem";
+            this.btnUpdateMenuItem.Size = new System.Drawing.Size(100, 40);
+            this.btnUpdateMenuItem.TabIndex = 7;
+            this.btnUpdateMenuItem.Text = "Обновить";
+            this.btnUpdateMenuItem.UseVisualStyleBackColor = false;
+            // 
+            // btnDeleteMenuItem
+            // 
+            this.btnDeleteMenuItem.BackColor = System.Drawing.Color.LightCoral;
+            this.btnDeleteMenuItem.Enabled = false;
+            this.btnDeleteMenuItem.Location = new System.Drawing.Point(290, 260);
+            this.btnDeleteMenuItem.Name = "btnDeleteMenuItem";
+            this.btnDeleteMenuItem.Size = new System.Drawing.Size(100, 40);
+            this.btnDeleteMenuItem.TabIndex = 8;
+            this.btnDeleteMenuItem.Text = "Удалить";
+            this.btnDeleteMenuItem.UseVisualStyleBackColor = false;
             // 
             // tabPageUsers
             // 
@@ -1423,7 +1431,6 @@
             this.Controls.Add(this.statusStrip);
             this.Controls.Add(this.menuStrip);
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip;
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
@@ -1491,7 +1498,6 @@
             this.menuStrip.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
-
         }
 
         #endregion
@@ -1590,6 +1596,8 @@
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusUser;
         private System.Windows.Forms.Timer timerClock;
         private System.Windows.Forms.Button btnCompleteOrder;
+        private System.Windows.Forms.Button btnUpdateMenuItem;
+        private System.Windows.Forms.Button btnDeleteMenuItem;
 
         // DataGridView columns
         private System.Windows.Forms.DataGridViewTextBoxColumn OrderNumber;
@@ -1612,6 +1620,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn MenuItemName;
         private System.Windows.Forms.DataGridViewTextBoxColumn MenuItemCategory;
         private System.Windows.Forms.DataGridViewTextBoxColumn MenuItemPrice;
+        private System.Windows.Forms.DataGridViewTextBoxColumn MenuItemIsAvailable;
         private System.Windows.Forms.DataGridViewTextBoxColumn UserId;
         private System.Windows.Forms.DataGridViewTextBoxColumn UserName;
         private System.Windows.Forms.DataGridViewTextBoxColumn UserRole;

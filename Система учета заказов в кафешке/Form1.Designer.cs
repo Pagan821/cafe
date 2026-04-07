@@ -20,7 +20,7 @@
             base.Dispose(disposing);
         }
 
-        #region код автоматически сгенерирован в Windows Form
+        #region код автоматически генерируется в Windows Fom
 
         /// <summary>
         /// Required method for Designer support - do not modify
@@ -33,6 +33,7 @@
             this.tabPageOrders = new System.Windows.Forms.TabPage();
             this.splitContainerOrders = new System.Windows.Forms.SplitContainer();
             this.groupBoxNewOrder = new System.Windows.Forms.GroupBox();
+            this.chkShowOnlyAvailable = new System.Windows.Forms.CheckBox();
             this.listBoxAvailableItems = new System.Windows.Forms.ListBox();
             this.labelAvailableItems = new System.Windows.Forms.Label();
             this.numericQuantity = new System.Windows.Forms.NumericUpDown();
@@ -127,6 +128,8 @@
             this.comboBoxRole = new System.Windows.Forms.ComboBox();
             this.labelRole = new System.Windows.Forms.Label();
             this.btnSaveUser = new System.Windows.Forms.Button();
+            this.btnUpdateUser = new System.Windows.Forms.Button();
+            this.btnDeleteUser = new System.Windows.Forms.Button();
             this.tabPageReports = new System.Windows.Forms.TabPage();
             this.groupBoxReports = new System.Windows.Forms.GroupBox();
             this.btnSalesReport = new System.Windows.Forms.Button();
@@ -250,6 +253,7 @@
             // 
             // groupBoxNewOrder
             // 
+            this.groupBoxNewOrder.Controls.Add(this.chkShowOnlyAvailable);
             this.groupBoxNewOrder.Controls.Add(this.listBoxAvailableItems);
             this.groupBoxNewOrder.Controls.Add(this.labelAvailableItems);
             this.groupBoxNewOrder.Controls.Add(this.numericQuantity);
@@ -264,12 +268,24 @@
             this.groupBoxNewOrder.TabStop = false;
             this.groupBoxNewOrder.Text = "Новый заказ";
             // 
+            // chkShowOnlyAvailable
+            // 
+            this.chkShowOnlyAvailable.AutoSize = true;
+            this.chkShowOnlyAvailable.Checked = true;
+            this.chkShowOnlyAvailable.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkShowOnlyAvailable.Location = new System.Drawing.Point(15, 240);
+            this.chkShowOnlyAvailable.Name = "chkShowOnlyAvailable";
+            this.chkShowOnlyAvailable.Size = new System.Drawing.Size(184, 17);
+            this.chkShowOnlyAvailable.TabIndex = 6;
+            this.chkShowOnlyAvailable.Text = "Показывать только доступные";
+            this.chkShowOnlyAvailable.UseVisualStyleBackColor = true;
+            // 
             // listBoxAvailableItems
             // 
             this.listBoxAvailableItems.FormattingEnabled = true;
             this.listBoxAvailableItems.Location = new System.Drawing.Point(15, 50);
             this.listBoxAvailableItems.Name = "listBoxAvailableItems";
-            this.listBoxAvailableItems.Size = new System.Drawing.Size(420, 134);
+            this.listBoxAvailableItems.Size = new System.Drawing.Size(420, 160);
             this.listBoxAvailableItems.TabIndex = 5;
             // 
             // labelAvailableItems
@@ -746,7 +762,6 @@
             "Все",
             "В работе",
             "Готов",
-            "Подан",
             "Завершен",
             "Отменен"});
             this.comboBoxStatusFilter.Location = new System.Drawing.Point(650, 60);
@@ -1169,6 +1184,7 @@
             this.btnAddUser.Size = new System.Drawing.Size(784, 53);
             this.btnAddUser.TabIndex = 1;
             this.btnAddUser.Text = "Добавить пользователя";
+            this.btnAddUser.UseVisualStyleBackColor = true;
             // 
             // groupBoxUserDetails
             // 
@@ -1179,6 +1195,8 @@
             this.groupBoxUserDetails.Controls.Add(this.comboBoxRole);
             this.groupBoxUserDetails.Controls.Add(this.labelRole);
             this.groupBoxUserDetails.Controls.Add(this.btnSaveUser);
+            this.groupBoxUserDetails.Controls.Add(this.btnUpdateUser);
+            this.groupBoxUserDetails.Controls.Add(this.btnDeleteUser);
             this.groupBoxUserDetails.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBoxUserDetails.Location = new System.Drawing.Point(0, 0);
             this.groupBoxUserDetails.Name = "groupBoxUserDetails";
@@ -1251,6 +1269,28 @@
             this.btnSaveUser.Text = "Сохранить";
             this.btnSaveUser.UseVisualStyleBackColor = false;
             // 
+            // btnUpdateUser
+            // 
+            this.btnUpdateUser.BackColor = System.Drawing.Color.LightBlue;
+            this.btnUpdateUser.Enabled = false;
+            this.btnUpdateUser.Location = new System.Drawing.Point(180, 260);
+            this.btnUpdateUser.Name = "btnUpdateUser";
+            this.btnUpdateUser.Size = new System.Drawing.Size(100, 40);
+            this.btnUpdateUser.TabIndex = 13;
+            this.btnUpdateUser.Text = "Обновить";
+            this.btnUpdateUser.UseVisualStyleBackColor = false;
+            // 
+            // btnDeleteUser
+            // 
+            this.btnDeleteUser.BackColor = System.Drawing.Color.LightCoral;
+            this.btnDeleteUser.Enabled = false;
+            this.btnDeleteUser.Location = new System.Drawing.Point(290, 260);
+            this.btnDeleteUser.Name = "btnDeleteUser";
+            this.btnDeleteUser.Size = new System.Drawing.Size(100, 40);
+            this.btnDeleteUser.TabIndex = 14;
+            this.btnDeleteUser.Text = "Удалить";
+            this.btnDeleteUser.UseVisualStyleBackColor = false;
+            // 
             // tabPageReports
             // 
             this.tabPageReports.Controls.Add(this.groupBoxReports);
@@ -1283,6 +1323,7 @@
             this.btnSalesReport.Size = new System.Drawing.Size(200, 40);
             this.btnSalesReport.TabIndex = 4;
             this.btnSalesReport.Text = "Отчет по продажам";
+            this.btnSalesReport.UseVisualStyleBackColor = true;
             // 
             // btnPopularItemsReport
             // 
@@ -1291,6 +1332,7 @@
             this.btnPopularItemsReport.Size = new System.Drawing.Size(200, 40);
             this.btnPopularItemsReport.TabIndex = 3;
             this.btnPopularItemsReport.Text = "Популярные блюда";
+            this.btnPopularItemsReport.UseVisualStyleBackColor = true;
             // 
             // btnCookingTimeReport
             // 
@@ -1299,6 +1341,7 @@
             this.btnCookingTimeReport.Size = new System.Drawing.Size(200, 40);
             this.btnCookingTimeReport.TabIndex = 2;
             this.btnCookingTimeReport.Text = "Время приготовления";
+            this.btnCookingTimeReport.UseVisualStyleBackColor = true;
             // 
             // btnShiftReport
             // 
@@ -1307,6 +1350,7 @@
             this.btnShiftReport.Size = new System.Drawing.Size(200, 40);
             this.btnShiftReport.TabIndex = 1;
             this.btnShiftReport.Text = "Отчет по смене";
+            this.btnShiftReport.UseVisualStyleBackColor = true;
             // 
             // richTextBoxReport
             // 
@@ -1498,6 +1542,7 @@
             this.menuStrip.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
+
         }
 
         #endregion
@@ -1598,6 +1643,9 @@
         private System.Windows.Forms.Button btnCompleteOrder;
         private System.Windows.Forms.Button btnUpdateMenuItem;
         private System.Windows.Forms.Button btnDeleteMenuItem;
+        private System.Windows.Forms.CheckBox chkShowOnlyAvailable;
+        private System.Windows.Forms.Button btnUpdateUser;
+        private System.Windows.Forms.Button btnDeleteUser;
 
         // DataGridView columns
         private System.Windows.Forms.DataGridViewTextBoxColumn OrderNumber;

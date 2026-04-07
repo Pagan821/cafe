@@ -18,6 +18,7 @@ namespace Система_учета_заказов_в_кафешке
         private List<OrderItemModel> currentOrderItems = new List<OrderItemModel>();
         private List<MenuItemModel> menuItems = new List<MenuItemModel>();
         private int? selectedMenuItemId = null;
+        private int? selectedUserId = null;
 
         public MainForm(string username, string role)
         {
@@ -54,15 +55,13 @@ namespace Система_учета_заказов_в_кафешке
             GC.WaitForPendingFinalizers();
         }
 
-
-       
-
-
         private void InitializeForm()
         {
             comboBoxStatusFilter.SelectedIndex = 0;
             comboBoxCategory.SelectedIndex = 0;
             comboBoxRole.SelectedIndex = 0;
+            chkShowOnlyAvailable.Checked = true;
+            chkShowOnlyAvailable.CheckedChanged += ChkShowOnlyAvailable_CheckedChanged;
 
             dateTimePickerStart.Value = DateTime.Today;
             dateTimePickerEnd.Value = DateTime.Today.AddDays(1);
@@ -89,6 +88,8 @@ namespace Система_учета_заказов_в_кафешке
             dataGridViewActiveOrders.MultiSelect = false;
             dataGridViewMenu.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dataGridViewMenu.MultiSelect = false;
+            dataGridViewUsers.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dataGridViewUsers.MultiSelect = false;
 
             timerClock.Tick += TimerClock_Tick;
             timerRefreshDisplay.Tick += TimerRefreshDisplay_Tick;
@@ -110,9 +111,7 @@ namespace Система_учета_заказов_в_кафешке
             btnSaveMenuItem.Click += BtnSaveMenuItem_Click;
             btnUpdateMenuItem.Click += BtnUpdateMenuItem_Click;
             btnDeleteMenuItem.Click += BtnDeleteMenuItem_Click;
-            btnSaveUser.Click += BtnSaveUser_Click;
             btnAddMenuItem.Click += BtnAddMenuItem_Click;
-            btnAddUser.Click += BtnAddUser_Click;
             btnSalesReport.Click += BtnSalesReport_Click;
             btnPopularItemsReport.Click += BtnPopularItemsReport_Click;
             btnCookingTimeReport.Click += BtnCookingTimeReport_Click;
@@ -121,6 +120,14 @@ namespace Система_учета_заказов_в_кафешке
             aboutToolStripMenuItem.Click += AboutToolStripMenuItem_Click;
             refreshAllToolStripMenuItem.Click += RefreshAllToolStripMenuItem_Click;
             changeUserToolStripMenuItem.Click += ChangeUserToolStripMenuItem_Click;
+
+            // User management events
+            dataGridViewUsers.CellClick += DataGridViewUsers_CellClick;
+            dataGridViewUsers.CellDoubleClick += DataGridViewUsers_CellDoubleClick;
+            btnSaveUser.Click += BtnSaveUser_Click;
+            btnUpdateUser.Click += BtnUpdateUser_Click;
+            btnDeleteUser.Click += BtnDeleteUser_Click;
+            btnAddUser.Click += BtnAddUser_Click;
 
             if (btnCompleteOrder != null)
             {
@@ -155,16 +162,27 @@ namespace Система_учета_заказов_в_кафешке
         private void LoadMenuFromDatabase()
         {
             menuItems = _db.GetAllMenuItems();
-
-            listBoxAvailableItems.Items.Clear();
-            foreach (var item in menuItems.Where(m => m.IsAvailable))
-            {
-                listBoxAvailableItems.Items.Add($"{item.Name} - {item.Price} руб.");
-            }
-
+            RefreshAvailableItemsList();
             RefreshMenuGrid();
         }
 
+        private void RefreshAvailableItemsList()
+        {
+            listBoxAvailableItems.Items.Clear();
+            var items = chkShowOnlyAvailable.Checked
+                ? menuItems.Where(m => m.IsAvailable)
+                : menuItems;
+
+            foreach (var item in items)
+            {
+                listBoxAvailableItems.Items.Add($"{item.Name} - {item.Price} руб.");
+            }
+        }
+
+        private void ChkShowOnlyAvailable_CheckedChanged(object sender, EventArgs e)
+        {
+            RefreshAvailableItemsList();
+        }
 
         private void LoadUsersFromDatabase()
         {
@@ -900,7 +918,6 @@ namespace Система_учета_заказов_в_кафешке
             }
         }
 
-
         private void ClearMenuItemForm()
         {
             selectedMenuItemId = null;
@@ -923,6 +940,41 @@ namespace Система_учета_заказов_в_кафешке
             ClearMenuItemForm();
         }
 
+        // ==================== УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯМИ ====================
+
+        private void DataGridViewUsers_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0)
+            {
+                DataGridViewRow row = dataGridViewUsers.Rows[e.RowIndex];
+                selectedUserId = (int)row.Cells[0].Value;
+                txtUsername.Text = row.Cells[1].Value?.ToString();
+                string role = row.Cells[2].Value?.ToString();
+
+                if (role != null)
+                {
+                    int index = comboBoxRole.Items.IndexOf(role);
+                    if (index >= 0) comboBoxRole.SelectedIndex = index;
+                }
+
+                txtPassword.Clear();
+                // Используем Tag для хранения информации о том, что это редактирование
+                txtPassword.Tag = "edit";
+                txtPassword.Text = "";
+
+                btnSaveUser.Enabled = false;
+                btnUpdateUser.Enabled = true;
+                btnDeleteUser.Enabled = true;
+
+                groupBoxUserDetails.Text = "Редактирование пользователя";
+            }
+        }
+
+        private void DataGridViewUsers_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            DataGridViewUsers_CellClick(sender, e);
+        }
+
         private void BtnSaveUser_Click(object sender, EventArgs e)
         {
             if (!string.IsNullOrWhiteSpace(txtUsername.Text) &&
@@ -934,9 +986,7 @@ namespace Система_учета_заказов_в_кафешке
                     LoadUsersFromDatabase();
                     MessageBox.Show("Пользователь сохранен", "Успешно",
                         MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    txtUsername.Clear();
-                    txtPassword.Clear();
-                    comboBoxRole.SelectedIndex = 0;
+                    ClearUserForm();
                 }
                 else
                 {
@@ -946,18 +996,146 @@ namespace Система_учета_заказов_в_кафешке
             }
             else
             {
-                MessageBox.Show("Заполните все поля", "Внимание",
+                MessageBox.Show("Заполните все поля (имя и пароль)", "Внимание",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 
-        private void BtnAddUser_Click(object sender, EventArgs e)
+        private void BtnUpdateUser_Click(object sender, EventArgs e)
         {
+            if (!selectedUserId.HasValue)
+            {
+                MessageBox.Show("Пожалуйста, выберите пользователя для редактирования",
+                    "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtUsername.Text))
+            {
+                MessageBox.Show("Введите имя пользователя",
+                    "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string role = comboBoxRole.SelectedItem?.ToString();
+            if (string.IsNullOrEmpty(role))
+            {
+                MessageBox.Show("Пожалуйста, выберите роль",
+                    "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // Проверяем, не существует ли уже пользователь с таким именем (кроме текущего)
+            var users = _db.GetAllUsers();
+            var existingUser = users.FirstOrDefault(u =>
+                u.Username.Equals(txtUsername.Text, StringComparison.OrdinalIgnoreCase) &&
+                u.Id != selectedUserId.Value);
+
+            if (existingUser != null)
+            {
+                MessageBox.Show("Пользователь с таким именем уже существует",
+                    "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            DialogResult result = MessageBox.Show($"Обновить пользователя \"{txtUsername.Text}\"?",
+                "Подтверждение", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+            if (result == DialogResult.Yes)
+            {
+                string password = txtPassword.Text.Trim();
+                // Если пароль пустой - не меняем его
+                if (string.IsNullOrEmpty(password))
+                {
+                    password = null;
+                }
+                if (_db.UpdateUser(selectedUserId.Value, txtUsername.Text, password, role))
+                {
+                    LoadUsersFromDatabase();
+                    MessageBox.Show("Пользователь успешно обновлен!",
+                        "Успешно", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    ClearUserForm();
+                }
+                else
+                {
+                    MessageBox.Show("Ошибка при обновлении пользователя",
+                        "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        private void BtnDeleteUser_Click(object sender, EventArgs e)
+        {
+            if (!selectedUserId.HasValue)
+            {
+                MessageBox.Show("Пожалуйста, выберите пользователя для удаления",
+                    "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var user = _db.GetAllUsers().FirstOrDefault(u => u.Id == selectedUserId.Value);
+            if (user == null)
+            {
+                MessageBox.Show("Пользователь не найден",
+                    "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (user.Username == "admin")
+            {
+                MessageBox.Show("Нельзя удалить администратора по умолчанию",
+                    "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            DialogResult result = MessageBox.Show(
+                $"Вы уверены, что хотите удалить пользователя \"{user.Username}\"?\n\n" +
+                "Это действие необратимо.",
+                "Подтверждение удаления",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning);
+
+            if (result == DialogResult.Yes)
+            {
+                if (_db.DeleteUser(selectedUserId.Value))
+                {
+                    LoadUsersFromDatabase();
+                    MessageBox.Show("Пользователь успешно удален!",
+                        "Успешно", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    ClearUserForm();
+                }
+                else
+                {
+                    MessageBox.Show("Ошибка при удалении пользователя",
+                        "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+       
+
+        private void ClearUserForm()
+        {
+            selectedUserId = null;
             txtUsername.Clear();
             txtPassword.Clear();
             comboBoxRole.SelectedIndex = 0;
+
+            btnSaveUser.Enabled = true;
+            btnUpdateUser.Enabled = false;
+            btnDeleteUser.Enabled = false;
+
+            groupBoxUserDetails.Text = "Добавление пользователя";
+
             txtUsername.Focus();
         }
+
+        private void BtnAddUser_Click(object sender, EventArgs e)
+        {
+            ClearUserForm();
+        }
+
+        // ==================== ОТЧЕТЫ ====================
 
         private void GenerateReport(string title, string content)
         {
@@ -1030,7 +1208,7 @@ namespace Система_учета_заказов_в_кафешке
                 $"Среднее время ожидания: {(avgTime > 0 ? $"{avgTime:F0}" : "—")} мин");
         }
 
-       
+
         private void ChangeUserToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var loginForm = new Forms.LoginForm();
@@ -1066,7 +1244,5 @@ namespace Система_учета_заказов_в_кафешке
             RefreshDisplay();
             BtnSearch_Click(sender, e);
         }
-
-        
     }
 }

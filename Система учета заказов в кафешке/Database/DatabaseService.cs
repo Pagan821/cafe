@@ -49,8 +49,6 @@ namespace Система_учета_заказов_в_кафешке.Database
             {
                 if (disposing)
                 {
-                    // Освобождаем управляемые ресурсы
-                    // Так как мы используем using везде, дополнительные действия не требуются
                 }
                 _disposed = true;
             }
@@ -145,6 +143,34 @@ namespace Система_учета_заказов_в_кафешке.Database
                         cmd.Parameters.AddWithValue("@username", "admin");
                         cmd.Parameters.AddWithValue("@password", HashPassword("admin123"));
                         cmd.Parameters.AddWithValue("@role", "Администратор");
+                        cmd.Parameters.AddWithValue("@createdAt", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    // Добавляем тестового повара
+                    string insertCook = @"
+                        INSERT INTO Users (Username, PasswordHash, Role, CreatedAt, IsActive)
+                        VALUES (@username, @password, @role, @createdAt, 1)";
+
+                    using (var cmd = new SQLiteCommand(insertCook, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@username", "cook");
+                        cmd.Parameters.AddWithValue("@password", HashPassword("cook123"));
+                        cmd.Parameters.AddWithValue("@role", "Повар");
+                        cmd.Parameters.AddWithValue("@createdAt", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    // Добавляем тестового кассира
+                    string insertCashier = @"
+                        INSERT INTO Users (Username, PasswordHash, Role, CreatedAt, IsActive)
+                        VALUES (@username, @password, @role, @createdAt, 1)";
+
+                    using (var cmd = new SQLiteCommand(insertCashier, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@username", "cashier");
+                        cmd.Parameters.AddWithValue("@password", HashPassword("cashier123"));
+                        cmd.Parameters.AddWithValue("@role", "Кассир");
                         cmd.Parameters.AddWithValue("@createdAt", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                         cmd.ExecuteNonQuery();
                     }
@@ -289,6 +315,101 @@ namespace Система_учета_заказов_в_кафешке.Database
             }
         }
 
+        public bool UpdateUser(int id, string username, string password, string role)
+        {
+            using (var connection = new SQLiteConnection(_connectionString))
+            {
+                connection.Open();
+
+                string query;
+                SQLiteCommand cmd;
+
+                if (!string.IsNullOrWhiteSpace(password))
+                {
+                    query = @"UPDATE Users 
+                            SET Username = @username, 
+                                PasswordHash = @password, 
+                                Role = @role 
+                            WHERE Id = @id";
+                    cmd = new SQLiteCommand(query, connection);
+                    cmd.Parameters.AddWithValue("@password", HashPassword(password));
+                }
+                else
+                {
+                    query = @"UPDATE Users 
+                            SET Username = @username, 
+                                Role = @role 
+                            WHERE Id = @id";
+                    cmd = new SQLiteCommand(query, connection);
+                }
+
+                cmd.Parameters.AddWithValue("@id", id);
+                cmd.Parameters.AddWithValue("@username", username);
+                cmd.Parameters.AddWithValue("@role", role);
+
+                try
+                {
+                    return cmd.ExecuteNonQuery() > 0;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+        }
+
+        public bool DeleteUser(int id)
+        {
+            using (var connection = new SQLiteConnection(_connectionString))
+            {
+                connection.Open();
+
+                // Нельзя удалить администратора по умолчанию
+                string query = "DELETE FROM Users WHERE Id = @id AND Username != 'admin'";
+                using (var cmd = new SQLiteCommand(query, connection))
+                {
+                    cmd.Parameters.AddWithValue("@id", id);
+                    try
+                    {
+                        return cmd.ExecuteNonQuery() > 0;
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        public User GetUserById(int id)
+        {
+            using (var connection = new SQLiteConnection(_connectionString))
+            {
+                connection.Open();
+
+                string query = "SELECT Id, Username, Role, CreatedAt, IsActive FROM Users WHERE Id = @id";
+                using (var cmd = new SQLiteCommand(query, connection))
+                {
+                    cmd.Parameters.AddWithValue("@id", id);
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            return new User
+                            {
+                                Id = reader.GetInt32(0),
+                                Username = reader.GetString(1),
+                                Role = reader.GetString(2),
+                                CreatedAt = DateTime.Parse(reader.GetString(3)),
+                                IsActive = reader.GetInt32(4) == 1
+                            };
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
         // ==================== МЕТОДЫ ДЛЯ РАБОТЫ С МЕНЮ ====================
 
         public List<MenuItemModel> GetAllMenuItems()
@@ -381,7 +502,7 @@ namespace Система_учета_заказов_в_кафешке.Database
             {
                 connection.Open();
 
-                // Проверяем, используется ли блюдо в заказах
+                // Проверка, используется ли блюдо в заказах
                 string checkQuery = "SELECT COUNT(*) FROM OrderItems WHERE MenuItemId = @id";
                 using (var checkCmd = new SQLiteCommand(checkQuery, connection))
                 {
@@ -390,7 +511,7 @@ namespace Система_учета_заказов_в_кафешке.Database
 
                     if (count > 0)
                     {
-                        return false; // Нельзя удалить, так как используется в заказах
+                        return false;
                     }
                 }
 

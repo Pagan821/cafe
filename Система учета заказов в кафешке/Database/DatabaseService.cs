@@ -975,5 +975,44 @@ namespace Система_учета_заказов_в_кафешке.Database
                 return 0;
             }
         }
+
+        public bool CancelOrder(int orderId)
+        {
+            try
+            {
+                using (var connection = new SQLiteConnection(_connectionString))
+                {
+                    connection.Open();
+
+                    string checkStatusQuery = "SELECT Status FROM Orders WHERE Id = @id";
+                    string currentStatus;
+                    using (var checkCmd = new SQLiteCommand(checkStatusQuery, connection))
+                    {
+                        checkCmd.Parameters.AddWithValue("@id", orderId);
+                        currentStatus = checkCmd.ExecuteScalar()?.ToString();
+                    }
+
+                    if (currentStatus == "Завершен" || currentStatus == "Отменен")
+                    {
+                        LogError($"Невозможно отменить заказ ID={orderId} со статусом '{currentStatus}'");
+                        return false;
+                    }
+                    string query = @"UPDATE Orders 
+                            SET Status = 'Отменен' 
+                            WHERE Id = @id AND Status != 'Завершен'";
+
+                    using (var cmd = new SQLiteCommand(query, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@id", orderId);
+                        return cmd.ExecuteNonQuery() > 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogError($"Ошибка отмены заказа ID={orderId}", ex);
+                return false;
+            }
+        }
     }
 }

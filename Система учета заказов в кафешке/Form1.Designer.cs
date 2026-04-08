@@ -47,6 +47,7 @@
             this.labelOrderTotal = new System.Windows.Forms.Label();
             this.groupBoxActiveOrders = new System.Windows.Forms.GroupBox();
             this.btnCompleteOrder = new System.Windows.Forms.Button();
+            this.btnCancelExistingOrder = new System.Windows.Forms.Button();
             this.dataGridViewActiveOrders = new System.Windows.Forms.DataGridView();
             this.OrderNumber = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.OrderItems = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -371,7 +372,7 @@
             this.btnCancelOrder.Name = "btnCancelOrder";
             this.btnCancelOrder.Size = new System.Drawing.Size(215, 40);
             this.btnCancelOrder.TabIndex = 2;
-            this.btnCancelOrder.Text = "Отменить заказ";
+            this.btnCancelOrder.Text = "Очистить корзину";
             this.btnCancelOrder.UseVisualStyleBackColor = false;
             // 
             // btnEditOrder
@@ -396,6 +397,7 @@
             // 
             // groupBoxActiveOrders
             // 
+            this.groupBoxActiveOrders.Controls.Add(this.btnCancelExistingOrder);
             this.groupBoxActiveOrders.Controls.Add(this.btnCompleteOrder);
             this.groupBoxActiveOrders.Controls.Add(this.dataGridViewActiveOrders);
             this.groupBoxActiveOrders.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -415,6 +417,16 @@
             this.btnCompleteOrder.TabIndex = 2;
             this.btnCompleteOrder.Text = "Завершить заказ";
             this.btnCompleteOrder.UseVisualStyleBackColor = false;
+            // 
+            // btnCancelExistingOrder
+            // 
+            this.btnCancelExistingOrder.BackColor = System.Drawing.Color.LightCoral;
+            this.btnCancelExistingOrder.Location = new System.Drawing.Point(410, 15);
+            this.btnCancelExistingOrder.Name = "btnCancelExistingOrder";
+            this.btnCancelExistingOrder.Size = new System.Drawing.Size(150, 35);
+            this.btnCancelExistingOrder.TabIndex = 3;
+            this.btnCancelExistingOrder.Text = "Отменить заказ";
+            this.btnCancelExistingOrder.UseVisualStyleBackColor = false;
             // 
             // dataGridViewActiveOrders
             // 
@@ -1641,6 +1653,7 @@
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusUser;
         private System.Windows.Forms.Timer timerClock;
         private System.Windows.Forms.Button btnCompleteOrder;
+        private System.Windows.Forms.Button btnCancelExistingOrder;
         private System.Windows.Forms.Button btnUpdateMenuItem;
         private System.Windows.Forms.Button btnDeleteMenuItem;
         private System.Windows.Forms.CheckBox chkShowOnlyAvailable;

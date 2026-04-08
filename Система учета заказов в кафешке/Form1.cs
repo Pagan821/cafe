@@ -120,6 +120,7 @@ namespace Система_учета_заказов_в_кафешке
             aboutToolStripMenuItem.Click += AboutToolStripMenuItem_Click;
             refreshAllToolStripMenuItem.Click += RefreshAllToolStripMenuItem_Click;
             changeUserToolStripMenuItem.Click += ChangeUserToolStripMenuItem_Click;
+            btnCancelExistingOrder.Click += BtnCancelExistingOrder_Click;
 
             // User management events
             dataGridViewUsers.CellClick += DataGridViewUsers_CellClick;
@@ -316,6 +317,7 @@ namespace Система_учета_заказов_в_кафешке
         {
             var orders = _db.GetAllOrders();
             dataGridViewActiveOrders.Rows.Clear();
+            // Исключаем завершенные и отмененные заказы из активных
             var activeOrders = orders.Where(o => o.Status != "Завершен" && o.Status != "Отменен");
 
             foreach (var order in activeOrders)
@@ -336,6 +338,7 @@ namespace Система_учета_заказов_в_кафешке
             var orders = _db.GetAllOrders();
 
             dataGridViewPendingOrders.Rows.Clear();
+            // Только заказы со статусом "Ожидает" (не отмененные)
             var pendingOrders = orders.Where(o => o.Status == "Ожидает");
             foreach (var order in pendingOrders)
             {
@@ -348,6 +351,7 @@ namespace Система_учета_заказов_в_кафешке
             }
 
             dataGridViewInProgress.Rows.Clear();
+            // Только заказы со статусом "В работе" (не отмененные)
             var inProgressOrders = orders.Where(o => o.Status == "В работе");
             foreach (var order in inProgressOrders)
             {
@@ -589,6 +593,98 @@ namespace Система_учета_заказов_в_кафешке
             }
         }
 
+        private void BtnCancelExistingOrder_Click(object sender, EventArgs e)
+        {
+            // Проверяем, выбран ли заказ
+            if (dataGridViewActiveOrders.SelectedRows.Count == 0 && dataGridViewActiveOrders.CurrentRow == null)
+            {
+                MessageBox.Show("Пожалуйста, выберите заказ из списка активных заказов",
+                    "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            DataGridViewRow selectedRow = dataGridViewActiveOrders.SelectedRows.Count > 0
+                ? dataGridViewActiveOrders.SelectedRows[0]
+                : dataGridViewActiveOrders.CurrentRow;
+
+            if (selectedRow == null || selectedRow.Cells[0].Value == null)
+            {
+                MessageBox.Show("Пожалуйста, выберите заказ из списка активных заказов",
+                    "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            int orderNumber = (int)selectedRow.Cells[0].Value;
+            var order = _db.GetAllOrders().FirstOrDefault(o => o.OrderNumber == orderNumber);
+
+            if (order != null)
+            {
+                // Проверяем, можно ли отменить заказ
+                if (order.Status == "Завершен")
+                {
+                    MessageBox.Show($"Заказ №{orderNumber} уже завершен и не может быть отменен.",
+                        "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                if (order.Status == "Отменен")
+                {
+                    MessageBox.Show($"Заказ №{orderNumber} уже отменен.",
+                        "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                string statusText = "";
+                switch (order.Status)
+                {
+                    case "Ожидает":
+                        statusText = "ожидает приготовления";
+                        break;
+                    case "В работе":
+                        statusText = "готовится";
+                        break;
+                    case "Готов":
+                        statusText = "готов к выдаче";
+                        break;
+                    default:
+                        statusText = order.Status;
+                        break;
+                }
+
+                DialogResult result = MessageBox.Show(
+                    $"Вы уверены, что хотите отменить заказ №{orderNumber}?\n\n" +
+                    $"Текущий статус: {statusText}\n" +
+                    $"Сумма заказа: {order.Total:F2} руб.\n\n" +
+                    "Отмененный заказ будет перемещен в историю.",
+                    "Подтверждение отмены",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question);
+
+                if (result == DialogResult.Yes)
+                {
+                    if (_db.CancelOrder(order.Id))
+                    {
+                        // Обновляем все представления
+                        RefreshOrdersList();
+                        RefreshKitchenView();
+                        RefreshDisplay();
+
+                        MessageBox.Show($"Заказ №{orderNumber} отменен!",
+                            "Заказ отменен", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Ошибка при отмене заказа. Возможно, заказ уже завершен.",
+                            "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+            else
+            {
+                MessageBox.Show("Заказ не найден", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
         private void RefreshDisplay()
         {
             flowLayoutPanelOrders.Controls.Clear();
@@ -608,6 +704,7 @@ namespace Система_учета_заказов_в_кафешке
                 return;
             }
 
+            // Исключаем завершенные и отмененные заказы
             var activeOrders = orders.Where(o => o.Status != "Завершен" && o.Status != "Отменен")
                                       .OrderBy(o => o.OrderNumber);
 
@@ -1112,7 +1209,7 @@ namespace Система_учета_заказов_в_кафешке
             }
         }
 
-       
+
 
         private void ClearUserForm()
         {
@@ -1232,7 +1329,10 @@ namespace Система_учета_заказов_в_кафешке
                 "• Десерты\n\n" +
                 "Для завершения заказа:\n" +
                 "1. Выберите заказ в списке 'Активные заказы'\n" +
-                "2. Нажмите кнопку 'Завершить заказ'",
+                "2. Нажмите кнопку 'Завершить заказ'\n\n" +
+                "Для отмены заказа:\n" +
+                "1. Выберите заказ в списке 'Активные заказы'\n" +
+                "2. Нажмите кнопку 'Отменить заказ'",
                 "О программе", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 

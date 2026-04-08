@@ -68,18 +68,54 @@ namespace Система_учета_заказов_в_кафешке
 
             toolStripStatusUser.Text = $"Пользователь: {_currentUser} ({_currentRole})";
 
-            LoadDataFromDatabase();
-            // Настройка прав доступа
-            if (_currentRole != "Администратор")
+            // Настройка прав доступа в зависимости от роли
+            switch (_currentRole)
             {
-                tabPageAdmin.Enabled = false;
-            }
-            if (_currentRole == "Повар")
-            {
-                tabPageOrders.Enabled = false;
-                tabPageHistory.Enabled = false;
+                case "Администратор":
+                    // Полный доступ ко всем вкладкам
+                    tabPageAdmin.Enabled = true;
+                    tabPageOrders.Enabled = true;
+                    tabPageKitchen.Enabled = true;
+                    tabPageHistory.Enabled = true;
+                    tabPageDisplay.Enabled = true;
+                    break;
+
+                case "Повар":
+                    // Повар видит только кухню и монитор статусов
+                    tabPageAdmin.Enabled = false;
+                    tabPageOrders.Enabled = false;
+                    tabPageHistory.Enabled = false;
+                    tabPageKitchen.Enabled = true;
+                    tabPageDisplay.Enabled = true;
+                    // Переключаем на вкладку кухни
+                    tabControlMain.SelectedTab = tabPageKitchen;
+                    break;
+
+                case "Кассир":
+                    // Кассир: заказы, история, монитор статусов
+                    tabPageAdmin.Enabled = false;
+                    tabPageKitchen.Enabled = false;
+                    tabPageOrders.Enabled = true;
+                    tabPageHistory.Enabled = true;
+                    tabPageDisplay.Enabled = true;
+                    // Переключаем на вкладку заказов
+                    tabControlMain.SelectedTab = tabPageOrders;
+                    break;
+
+                default:
+                    // На всякий случай, если роль неизвестна — только монитор
+                    tabPageAdmin.Enabled = false;
+                    tabPageOrders.Enabled = false;
+                    tabPageKitchen.Enabled = false;
+                    tabPageHistory.Enabled = false;
+                    tabPageDisplay.Enabled = true;
+                    break;
             }
 
+
+            ConfigureButtonsByRole();
+
+            // Настройка выделения строк в DataGridView
             dataGridViewPendingOrders.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dataGridViewPendingOrders.MultiSelect = false;
             dataGridViewInProgress.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
@@ -139,8 +175,38 @@ namespace Система_учета_заказов_в_кафешке
             dataGridViewMenu.CellDoubleClick += DataGridViewMenu_CellDoubleClick;
             tabControlMain.SelectedIndexChanged += TabControlMain_SelectedIndexChanged;
 
+
             RefreshMenuGrid();
+
         }
+
+        private void ConfigureButtonsByRole()
+        {
+            bool isAdmin = (_currentRole == "Администратор");
+            btnAddMenuItem.Visible = isAdmin;
+            btnSaveMenuItem.Visible = isAdmin;
+            btnUpdateMenuItem.Visible = isAdmin;
+            btnDeleteMenuItem.Visible = isAdmin;
+            btnAddUser.Visible = isAdmin;
+            btnSaveUser.Visible = isAdmin;
+            btnUpdateUser.Visible = isAdmin;
+            btnDeleteUser.Visible = isAdmin;
+
+            bool isCashier = (_currentRole == "Кассир");
+            btnCreateOrder.Visible = isCashier || isAdmin;
+            btnAddToOrder.Visible = isCashier || isAdmin;
+            btnCancelOrder.Visible = isCashier || isAdmin;
+            btnEditOrder.Visible = isCashier || isAdmin;
+            btnCompleteOrder.Visible = isCashier || isAdmin;
+            btnCancelExistingOrder.Visible = isCashier || isAdmin;
+
+            bool isCook = (_currentRole == "Повар");
+            btnStartCooking.Visible = isCook || isAdmin;
+            btnMarkReady.Visible = isCook || isAdmin;
+        }
+
+
+
 
         // Обработчик выхода из программы
         private void ExitToolStripMenuItem_Click(object sender, EventArgs e)

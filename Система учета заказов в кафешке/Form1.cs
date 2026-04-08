@@ -1297,6 +1297,14 @@ namespace Система_учета_заказов_в_кафешке
                 return;
             }
 
+            if (user.Username == _currentUser)
+            {
+                MessageBox.Show("Вы не можете удалить свою собственную учётную запись.\n\n" +
+                                "Для удаления этого пользователя войдите под другой учётной записью с правами администратора.",
+                    "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             DialogResult result = MessageBox.Show(
                 $"Вы уверены, что хотите удалить пользователя \"{user.Username}\"?\n\n" +
                 "Это действие необратимо.",

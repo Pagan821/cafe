@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 using Система_учета_заказов_в_кафешке.Database;
 using MenuItemModel = Система_учета_заказов_в_кафешке.Models.MenuItem;
@@ -925,9 +926,54 @@ namespace Система_учета_заказов_в_кафешке
 
             if (saveFileDialog.ShowDialog() == DialogResult.OK)
             {
-                MessageBox.Show($"Данные экспортированы в файл: {saveFileDialog.FileName}",
-                    "Успешно", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                try
+                {
+                    using (var writer = new System.IO.StreamWriter(saveFileDialog.FileName, false, Encoding.UTF8))
+                    {
+                        string[] headers = new string[dataGridViewHistory.Columns.Count];
+                        for (int i = 0; i < dataGridViewHistory.Columns.Count; i++)
+                        {
+                            headers[i] = EscapeCsvValue(dataGridViewHistory.Columns[i].HeaderText);
+                        }
+                        writer.WriteLine(string.Join(";", headers));
+
+                        foreach (DataGridViewRow row in dataGridViewHistory.Rows)
+                        {
+                            if (row.IsNewRow) continue;
+
+                            string[] cells = new string[dataGridViewHistory.Columns.Count];
+                            for (int i = 0; i < dataGridViewHistory.Columns.Count; i++)
+                            {
+                                object value = row.Cells[i].Value;
+                                cells[i] = EscapeCsvValue(value?.ToString() ?? "");
+                            }
+                            writer.WriteLine(string.Join(";", cells));
+                        }
+                    }
+
+                    MessageBox.Show($"Данные успешно экспортированы в файл:\n{saveFileDialog.FileName}",
+                        "Успешно", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Ошибка при экспорте данных: {ex.Message}",
+                        "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
+        }
+
+
+        private string EscapeCsvValue(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return "";
+
+            if (value.Contains(";") || value.Contains("\"") || value.Contains("\n") || value.Contains("\r"))
+            {
+                value = value.Replace("\"", "\"\"");
+                return $"\"{value}\"";
+            }
+            return value;
         }
 
         private void BtnSaveMenuItem_Click(object sender, EventArgs e)

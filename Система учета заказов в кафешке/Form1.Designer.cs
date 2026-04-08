@@ -396,7 +396,6 @@
             this.labelOrderTotal.Text = "Итого: 0 руб.";
             // 
             // groupBoxActiveOrders
-            // 
             this.groupBoxActiveOrders.Controls.Add(this.btnCancelExistingOrder);
             this.groupBoxActiveOrders.Controls.Add(this.btnCompleteOrder);
             this.groupBoxActiveOrders.Controls.Add(this.dataGridViewActiveOrders);
@@ -407,9 +406,8 @@
             this.groupBoxActiveOrders.TabIndex = 0;
             this.groupBoxActiveOrders.TabStop = false;
             this.groupBoxActiveOrders.Text = "Активные заказы";
-            // 
+
             // btnCompleteOrder
-            // 
             this.btnCompleteOrder.BackColor = System.Drawing.Color.Orange;
             this.btnCompleteOrder.Location = new System.Drawing.Point(570, 15);
             this.btnCompleteOrder.Name = "btnCompleteOrder";
@@ -417,9 +415,8 @@
             this.btnCompleteOrder.TabIndex = 2;
             this.btnCompleteOrder.Text = "Завершить заказ";
             this.btnCompleteOrder.UseVisualStyleBackColor = false;
-            // 
+
             // btnCancelExistingOrder
-            // 
             this.btnCancelExistingOrder.BackColor = System.Drawing.Color.LightCoral;
             this.btnCancelExistingOrder.Location = new System.Drawing.Point(410, 15);
             this.btnCancelExistingOrder.Name = "btnCancelExistingOrder";

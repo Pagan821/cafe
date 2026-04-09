@@ -104,7 +104,6 @@ namespace Система_учета_заказов_в_кафешке
                     break;
 
                 default:
-                    // На всякий случай, если роль неизвестна — только монитор
                     tabPageAdmin.Enabled = false;
                     tabPageOrders.Enabled = false;
                     tabPageKitchen.Enabled = false;

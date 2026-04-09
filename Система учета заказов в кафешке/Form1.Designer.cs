@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.tabControlMain = new System.Windows.Forms.TabControl();
             this.tabPageOrders = new System.Windows.Forms.TabPage();
             this.splitContainerOrders = new System.Windows.Forms.SplitContainer();
@@ -46,8 +47,8 @@
             this.btnEditOrder = new System.Windows.Forms.Button();
             this.labelOrderTotal = new System.Windows.Forms.Label();
             this.groupBoxActiveOrders = new System.Windows.Forms.GroupBox();
-            this.btnCompleteOrder = new System.Windows.Forms.Button();
             this.btnCancelExistingOrder = new System.Windows.Forms.Button();
+            this.btnCompleteOrder = new System.Windows.Forms.Button();
             this.dataGridViewActiveOrders = new System.Windows.Forms.DataGridView();
             this.OrderNumber = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.OrderItems = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -396,6 +397,7 @@
             this.labelOrderTotal.Text = "Итого: 0 руб.";
             // 
             // groupBoxActiveOrders
+            // 
             this.groupBoxActiveOrders.Controls.Add(this.btnCancelExistingOrder);
             this.groupBoxActiveOrders.Controls.Add(this.btnCompleteOrder);
             this.groupBoxActiveOrders.Controls.Add(this.dataGridViewActiveOrders);
@@ -406,17 +408,9 @@
             this.groupBoxActiveOrders.TabIndex = 0;
             this.groupBoxActiveOrders.TabStop = false;
             this.groupBoxActiveOrders.Text = "Активные заказы";
-
-            // btnCompleteOrder
-            this.btnCompleteOrder.BackColor = System.Drawing.Color.Orange;
-            this.btnCompleteOrder.Location = new System.Drawing.Point(570, 15);
-            this.btnCompleteOrder.Name = "btnCompleteOrder";
-            this.btnCompleteOrder.Size = new System.Drawing.Size(150, 35);
-            this.btnCompleteOrder.TabIndex = 2;
-            this.btnCompleteOrder.Text = "Завершить заказ";
-            this.btnCompleteOrder.UseVisualStyleBackColor = false;
-
+            // 
             // btnCancelExistingOrder
+            // 
             this.btnCancelExistingOrder.BackColor = System.Drawing.Color.LightCoral;
             this.btnCancelExistingOrder.Location = new System.Drawing.Point(410, 15);
             this.btnCancelExistingOrder.Name = "btnCancelExistingOrder";
@@ -424,6 +418,16 @@
             this.btnCancelExistingOrder.TabIndex = 3;
             this.btnCancelExistingOrder.Text = "Отменить заказ";
             this.btnCancelExistingOrder.UseVisualStyleBackColor = false;
+            // 
+            // btnCompleteOrder
+            // 
+            this.btnCompleteOrder.BackColor = System.Drawing.Color.Orange;
+            this.btnCompleteOrder.Location = new System.Drawing.Point(570, 15);
+            this.btnCompleteOrder.Name = "btnCompleteOrder";
+            this.btnCompleteOrder.Size = new System.Drawing.Size(150, 35);
+            this.btnCompleteOrder.TabIndex = 2;
+            this.btnCompleteOrder.Text = "Завершить заказ";
+            this.btnCompleteOrder.UseVisualStyleBackColor = false;
             // 
             // dataGridViewActiveOrders
             // 
@@ -1484,6 +1488,7 @@
             this.Controls.Add(this.statusStrip);
             this.Controls.Add(this.menuStrip);
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip;
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;

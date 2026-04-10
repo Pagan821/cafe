@@ -14,7 +14,6 @@ namespace Система_учета_заказов_в_кафешке
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-
             Application.Run(new LoginForm());
         }
     }

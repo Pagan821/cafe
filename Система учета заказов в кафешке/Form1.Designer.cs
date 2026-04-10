@@ -29,6 +29,8 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.tabControlMain = new System.Windows.Forms.TabControl();
             this.tabPageOrders = new System.Windows.Forms.TabPage();
@@ -267,7 +269,7 @@
             this.groupBoxNewOrder.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             this.groupBoxNewOrder.Location = new System.Drawing.Point(0, 0);
             this.groupBoxNewOrder.Name = "groupBoxNewOrder";
-            this.groupBoxNewOrder.Size = new System.Drawing.Size(480, 423);
+            this.groupBoxNewOrder.Size = new System.Drawing.Size(480, 664);
             this.groupBoxNewOrder.TabIndex = 0;
             this.groupBoxNewOrder.TabStop = false;
             this.groupBoxNewOrder.Text = "Новый заказ";
@@ -278,7 +280,7 @@
             this.chkShowOnlyAvailable.Checked = true;
             this.chkShowOnlyAvailable.CheckState = System.Windows.Forms.CheckState.Checked;
             this.chkShowOnlyAvailable.Font = new System.Drawing.Font("Segoe UI", 10F);
-            this.chkShowOnlyAvailable.Location = new System.Drawing.Point(15, 240);
+            this.chkShowOnlyAvailable.Location = new System.Drawing.Point(3, 482);
             this.chkShowOnlyAvailable.Name = "chkShowOnlyAvailable";
             this.chkShowOnlyAvailable.Size = new System.Drawing.Size(222, 23);
             this.chkShowOnlyAvailable.TabIndex = 6;
@@ -287,19 +289,19 @@
             // 
             // listBoxAvailableItems
             // 
-            this.listBoxAvailableItems.Font = new System.Drawing.Font("Segoe UI", 11F);
+            this.listBoxAvailableItems.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.listBoxAvailableItems.FormattingEnabled = true;
-            this.listBoxAvailableItems.ItemHeight = 20;
-            this.listBoxAvailableItems.Location = new System.Drawing.Point(15, 50);
+            this.listBoxAvailableItems.ItemHeight = 32;
+            this.listBoxAvailableItems.Location = new System.Drawing.Point(10, 51);
             this.listBoxAvailableItems.Name = "listBoxAvailableItems";
-            this.listBoxAvailableItems.Size = new System.Drawing.Size(450, 164);
+            this.listBoxAvailableItems.Size = new System.Drawing.Size(450, 388);
             this.listBoxAvailableItems.TabIndex = 5;
             // 
             // labelAvailableItems
             // 
             this.labelAvailableItems.AutoSize = true;
             this.labelAvailableItems.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            this.labelAvailableItems.Location = new System.Drawing.Point(12, 25);
+            this.labelAvailableItems.Location = new System.Drawing.Point(5, 26);
             this.labelAvailableItems.Name = "labelAvailableItems";
             this.labelAvailableItems.Size = new System.Drawing.Size(141, 19);
             this.labelAvailableItems.TabIndex = 4;
@@ -308,7 +310,7 @@
             // numericQuantity
             // 
             this.numericQuantity.Font = new System.Drawing.Font("Segoe UI", 11F);
-            this.numericQuantity.Location = new System.Drawing.Point(120, 210);
+            this.numericQuantity.Location = new System.Drawing.Point(97, 440);
             this.numericQuantity.Minimum = new decimal(new int[] {
             1,
             0,
@@ -327,7 +329,7 @@
             // 
             this.labelQuantity.AutoSize = true;
             this.labelQuantity.Font = new System.Drawing.Font("Segoe UI", 10F);
-            this.labelQuantity.Location = new System.Drawing.Point(15, 212);
+            this.labelQuantity.Location = new System.Drawing.Point(6, 442);
             this.labelQuantity.Name = "labelQuantity";
             this.labelQuantity.Size = new System.Drawing.Size(85, 19);
             this.labelQuantity.TabIndex = 2;
@@ -339,9 +341,9 @@
             this.btnAddToOrder.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnAddToOrder.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Bold);
             this.btnAddToOrder.ForeColor = System.Drawing.Color.White;
-            this.btnAddToOrder.Location = new System.Drawing.Point(240, 206);
+            this.btnAddToOrder.Location = new System.Drawing.Point(233, 440);
             this.btnAddToOrder.Name = "btnAddToOrder";
-            this.btnAddToOrder.Size = new System.Drawing.Size(225, 35);
+            this.btnAddToOrder.Size = new System.Drawing.Size(225, 46);
             this.btnAddToOrder.TabIndex = 1;
             this.btnAddToOrder.Text = "Добавить в заказ";
             this.btnAddToOrder.UseVisualStyleBackColor = false;
@@ -352,9 +354,9 @@
             this.btnCreateOrder.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnCreateOrder.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
             this.btnCreateOrder.ForeColor = System.Drawing.Color.White;
-            this.btnCreateOrder.Location = new System.Drawing.Point(15, 340);
+            this.btnCreateOrder.Location = new System.Drawing.Point(15, 574);
             this.btnCreateOrder.Name = "btnCreateOrder";
-            this.btnCreateOrder.Size = new System.Drawing.Size(450, 50);
+            this.btnCreateOrder.Size = new System.Drawing.Size(450, 84);
             this.btnCreateOrder.TabIndex = 0;
             this.btnCreateOrder.Text = "СОЗДАТЬ ЗАКАЗ";
             this.btnCreateOrder.UseVisualStyleBackColor = false;
@@ -576,6 +578,14 @@
             this.dataGridViewPendingOrders.AllowUserToAddRows = false;
             this.dataGridViewPendingOrders.AllowUserToDeleteRows = false;
             this.dataGridViewPendingOrders.BackgroundColor = System.Drawing.Color.White;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridViewPendingOrders.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.dataGridViewPendingOrders.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridViewPendingOrders.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.KitchenOrderNumber,
@@ -892,6 +902,14 @@
             this.dataGridViewHistory.AllowUserToAddRows = false;
             this.dataGridViewHistory.AllowUserToDeleteRows = false;
             this.dataGridViewHistory.BackgroundColor = System.Drawing.Color.White;
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Segoe UI", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridViewHistory.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
             this.dataGridViewHistory.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridViewHistory.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.HistoryOrderNumber,
@@ -1530,7 +1548,7 @@
             // toolStripStatusLabel
             // 
             this.toolStripStatusLabel.Name = "toolStripStatusLabel";
-            this.toolStripStatusLabel.Size = new System.Drawing.Size(1147, 17);
+            this.toolStripStatusLabel.Size = new System.Drawing.Size(1185, 17);
             this.toolStripStatusLabel.Spring = true;
             this.toolStripStatusLabel.Text = "Готово";
             this.toolStripStatusLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -1539,15 +1557,13 @@
             // 
             this.toolStripStatusTime.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this.toolStripStatusTime.Name = "toolStripStatusTime";
-            this.toolStripStatusTime.Size = new System.Drawing.Size(20, 17);
-            this.toolStripStatusTime.Text = "⏰";
+            this.toolStripStatusTime.Size = new System.Drawing.Size(0, 17);
             // 
             // toolStripStatusUser
             // 
             this.toolStripStatusUser.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this.toolStripStatusUser.Name = "toolStripStatusUser";
-            this.toolStripStatusUser.Size = new System.Drawing.Size(18, 17);
-            this.toolStripStatusUser.Text = "👤";
+            this.toolStripStatusUser.Size = new System.Drawing.Size(0, 17);
             // 
             // menuStrip
             // 

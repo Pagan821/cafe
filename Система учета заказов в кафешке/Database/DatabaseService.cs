@@ -685,7 +685,7 @@ namespace Система_учета_заказов_в_кафешке.Database
                             using (var cmd = new SQLiteCommand(insertItem, connection, transaction))
                             {
                                 cmd.Parameters.AddWithValue("@orderId", orderId);
-                                cmd.Parameters.AddWithValue("@menuItemId", 0);
+                                cmd.Parameters.AddWithValue("@menuItemId", item.MenuItemId);
                                 cmd.Parameters.AddWithValue("@name", item.Name);
                                 cmd.Parameters.AddWithValue("@price", item.Price);
                                 cmd.Parameters.AddWithValue("@quantity", item.Quantity);
@@ -701,7 +701,7 @@ namespace Система_учета_заказов_в_кафешке.Database
                     {
                         transaction.Rollback();
                         LogError($"Ошибка создания заказа", ex);
-                        throw; // Пробрасываем, чтобы UI показал сообщение
+                        throw; 
                     }
                 }
             }

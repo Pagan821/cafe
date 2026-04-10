@@ -76,7 +76,7 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>Resources\burger-icon.ico</ApplicationIcon>
+    <ApplicationIcon>burger-icon.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup />
@@ -167,6 +167,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="burger-icon.ico" />
     <Content Include="Resources\burger-icon.ico" />
   </ItemGroup>
   <ItemGroup />
